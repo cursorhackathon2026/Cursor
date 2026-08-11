@@ -124,6 +124,12 @@ const D: Record<string, Tr> = {
   'body.kidney': { uz: 'Buyrak', ru: 'Почки', en: 'Kidneys' },
   'body.abdomen': { uz: 'Qorin / metabolizm', ru: 'Живот / обмен', en: 'Abdomen / metabolism' },
   'body.joints': { uz: "Bo'g'imlar", ru: 'Суставы', en: 'Joints' },
+  'body.analysis': { uz: 'AI tahlillari — ta’sirlangan a’zolar', ru: 'AI-анализ — затронутые органы', en: 'AI analysis — affected organs' },
+  'body.normal': { uz: 'Barcha asosiy a’zolar me’yorda ko‘rinmoqda.', ru: 'Все основные органы в норме.', en: 'All major organs appear normal.' },
+  'body.high': { uz: 'Yuqori e’tibor', ru: 'Высокое внимание', en: 'High attention' },
+  'body.watch': { uz: 'Kuzatuv', ru: 'Наблюдение', en: 'Watch' },
+  'body.ok': { uz: 'Me’yorda', ru: 'В норме', en: 'Normal' },
+  'body.hintDrag': { uz: 'Modelni sichqoncha bilan aylantiring', ru: 'Вращайте модель мышью', en: 'Drag to rotate the model' },
 
   // AI 5-yillik prognoz
   'prog.title': { uz: 'AI 5-yillik prognoz', ru: 'AI-прогноз на 5 лет', en: 'AI 5-year prognosis' },

@@ -20,14 +20,17 @@ export function TrendChart({
   const PAD = { l: 34, r: 10, t: 12, b: 22 }
   const vals = points.map((p) => p.value)
   const allVals = threshold != null ? [...vals, threshold] : vals
-  const min = Math.min(...allVals)
-  const max = Math.max(...allVals)
-  const range = max - min || 1
+  let lo = Math.min(...allVals)
+  let hi = Math.max(...allVals)
+  if (hi === lo) { const d = Math.max(1, Math.abs(hi) * 0.1); lo -= d; hi += d }  // tekis seriya
+  const padV = (hi - lo) * 0.15
+  lo -= padV; hi += padV                                                          // chetga yopishmasin
+  const range = hi - lo || 1
   const iw = W - PAD.l - PAD.r
   const ih = H - PAD.t - PAD.b
   const x = (i: number) =>
     PAD.l + (points.length <= 1 ? iw / 2 : (i / (points.length - 1)) * iw)
-  const y = (v: number) => PAD.t + ih - ((v - min) / range) * ih
+  const y = (v: number) => PAD.t + ih - ((v - lo) / range) * ih
 
   const linePath = points
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`)
@@ -73,10 +76,10 @@ export function TrendChart({
         )}
         {/* y-min / y-max belgilar */}
         <text x={PAD.l - 6} y={PAD.t + 4} textAnchor="end" className="fill-slate-400" fontSize={9}>
-          {Math.round(max)}
+          {Math.round(hi)}
         </text>
         <text x={PAD.l - 6} y={PAD.t + ih} textAnchor="end" className="fill-slate-400" fontSize={9}>
-          {Math.round(min)}
+          {Math.round(lo)}
         </text>
         {/* chiziq */}
         <path d={linePath} fill="none" className="stroke-brand" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />

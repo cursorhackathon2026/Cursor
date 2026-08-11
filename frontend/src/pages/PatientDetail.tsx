@@ -13,7 +13,8 @@ import { TreatmentPlanner } from '../components/TreatmentPlanner'
 
 const TwinBody = lazy(() => import('../components/TwinBody').then((m) => ({ default: m.TwinBody })))
 
-const short = (iso: string) => { const d = new Date(iso); return `${d.getDate()}.${d.getMonth() + 1}` }
+const pad2 = (n: number) => String(n).padStart(2, '0')
+const short = (iso: string) => { const d = new Date(iso); return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}` }
 
 const TWIN_STYLE: Record<string, { bg: string; text: string; icon: string }> = {
   Xavfsiz: { bg: 'bg-green-50 dark:bg-green-950/40', text: 'text-green-700 dark:text-green-300', icon: '✓' },
@@ -162,7 +163,7 @@ export default function PatientDetail() {
         {/* 3D egizak tana */}
         <div className="card p-5">
           <h3 className="mb-1 font-bold">🧍 {t('body.title')}</h3>
-          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">{t('body.desc')} · {t('body.rotate')}</p>
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">{t('body.desc')}</p>
           <Suspense fallback={<div className="grid h-80 place-items-center text-sm text-slate-400">3D…</div>}>
             <TwinBody patient={p} />
           </Suspense>

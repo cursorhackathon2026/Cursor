@@ -616,11 +616,11 @@ def trajectory(patient_id: str):
         if not p:
             raise HTTPException(404, "Bemor topilmadi")
         last = s.exec(select(Encounter).where(Encounter.patient_id == p.id).order_by(Encounter.id.desc())).first()
-        base = min(100, last.assessment.get("score", 0)) if last else 0
-        base = max(20, base)
+        # boshlang'ich xavf 20–80 oralig'ida — grafikda o'sish/pasayish ko'rinsin
+        base = max(20, min(80, last.assessment.get("score", 0))) if last else 20
         meds = s.exec(select(Medication).where(Medication.patient_id == p.id)).all()
         adh = (sum(1 for m in meds if m.taken_today) / len(meds)) if meds else 0.5
-        slope = -7 if adh >= 0.7 else (9 if adh < 0.34 else 1)
+        slope = -7 if adh >= 0.7 else (7 if adh < 0.34 else 1)
         pts, v = [], base
         for m in range(7):
             pts.append({"label": "Hozir" if m == 0 else f"+{m}", "value": max(5, min(100, round(v)))})
