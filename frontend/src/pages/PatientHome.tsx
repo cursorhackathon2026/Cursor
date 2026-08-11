@@ -10,7 +10,7 @@ import { useT } from '../lib/i18n'
 export default function PatientHome() {
   const session = getSession()
   const pid = session?.patientId
-  const { t, lang } = useT()
+  const { t, td, lang } = useT()
   const [p, setP] = useState<Patient | null>(null)
   const [meds, setMeds] = useState<Medication[]>([])
   const [recs, setRecs] = useState<LifestyleRec[]>([])
@@ -68,8 +68,8 @@ export default function PatientHome() {
           </div>
           {p && (p.conditions.length > 0 || p.allergies.length > 0) && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {p.conditions.map((c) => <span key={c} className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs">{c}</span>)}
-              {p.allergies.map((a) => <span key={a} className="rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-2.5 py-1 text-xs">{t('pd.allergy')}: {a}</span>)}
+              {p.conditions.map((c) => <span key={c} className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs">{td(c)}</span>)}
+              {p.allergies.map((a) => <span key={a} className="rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-2.5 py-1 text-xs">{t('pd.allergy')}: {td(a)}</span>)}
             </div>
           )}
         </div>

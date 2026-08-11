@@ -10,7 +10,7 @@ const SYMPTOM_KEYS = ['bosh_ogrigi', 'koz_parcha', 'kongil_aynishi', 'shish', 'q
 const emptyForm = { bp_sys: '', bp_dia: '', weight: '', hemoglobin: '', glucose: '', gestational_week: '' }
 
 export default function NurseCapture() {
-  const { t, sym, lang } = useT()
+  const { t, td, sym, lang } = useT()
   const [patients, setPatients] = useState<PatientListItem[]>([])
   const [pid, setPid] = useState('')
   const [form, setForm] = useState({ ...emptyForm })
@@ -103,7 +103,7 @@ export default function NurseCapture() {
             )}
             <div className="mt-4"><FactorBars factors={result.assessment.factors} /></div>
             <div className="mt-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3 text-sm">
-              <span className="font-semibold">{t('nc.rec')}: </span>{result.assessment.recommendation}
+              <span className="font-semibold">{t('nc.rec')}: </span>{td(result.assessment.recommendation)}
             </div>
             {result.alert && <div className="mt-3 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-700 dark:text-red-300">🔔 {t('nc.alertSent')}</div>}
             <button onClick={reset} className="btn-ghost mt-4 w-full">{t('nc.newVisit')}</button>

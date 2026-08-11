@@ -9,7 +9,7 @@ import { useT } from '../lib/i18n'
 export default function Alerts() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [onlyOpen, setOnlyOpen] = useState(true)
-  const { t } = useT()
+  const { t, td } = useT()
 
   const load = () => api.alerts().then(setAlerts)
   useEffect(() => { load() }, [])
@@ -49,8 +49,8 @@ export default function Alerts() {
                     </div>
                     <span className="text-xs text-slate-400">{timeAgo(a.created_at)}</span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{a.reason}</p>
-                  <p className="mt-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 p-2.5 text-sm">{a.recommendation}</p>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{td(a.reason)}</p>
+                  <p className="mt-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 p-2.5 text-sm">{td(a.recommendation)}</p>
                   <div className="mt-3">
                     {a.status === 'ochiq'
                       ? <button onClick={() => ack(a.id)} className="btn-primary !py-2 text-sm">✓ {t('al.ack')}</button>

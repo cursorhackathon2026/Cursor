@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [filter, setFilter] = useState<Zone | 'Barchasi'>('Barchasi')
   const [loading, setLoading] = useState(true)
   const nav = useNavigate()
-  const { t, zone: zoneT } = useT()
+  const { t, zone: zoneT, td } = useT()
 
   useEffect(() => {
     Promise.all([api.stats(), api.patients(), api.alerts('ochiq')])
@@ -29,7 +29,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <TopBar title={t('nav.home')} subtitle={`${stats?.region ?? 'Navoiy'} · ${t('dash.sub')}, ${todayStr()}`} alertCount={stats?.open_alerts} />
+      <TopBar title={t('nav.home')} subtitle={`${td(stats?.region ?? 'Navoiy viloyati')} · ${t('dash.sub')}, ${todayStr()}`} alertCount={stats?.open_alerts} />
       <div className="p-4 md:p-6 space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatTile label={t('dash.total')} value={stats?.total ?? '—'} icon="👥" />
@@ -76,7 +76,7 @@ export default function Dashboard() {
                       <td className="px-4 py-3 nums">{p.age}</td>
                       <td className="px-4 py-3 nums">{p.gestational_week}</td>
                       <td className="px-4 py-3"><ZoneBadge zone={p.zone} /></td>
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{p.reason[0]?.label ?? '—'}</td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{p.reason[0] ? td(p.reason[0].label) : '—'}</td>
                       <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{timeAgo(p.updated_at)}</td>
                     </tr>
                   ))}
@@ -98,7 +98,7 @@ export default function Dashboard() {
                     <span className="font-semibold text-sm">{a.patient_name}</span>
                     <ZoneBadge zone={a.zone} />
                   </div>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{a.reason}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{td(a.reason)}</p>
                   <p className="mt-1 text-[11px] text-slate-400">{timeAgo(a.created_at)}</p>
                 </div>
               ))}

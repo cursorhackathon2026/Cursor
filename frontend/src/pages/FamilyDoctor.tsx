@@ -9,7 +9,7 @@ import { useT } from '../lib/i18n'
 
 export default function FamilyDoctor() {
   const [tasks, setTasks] = useState<Alert[]>([])
-  const { t } = useT()
+  const { t, td } = useT()
 
   const load = () => api.alerts().then(setTasks)
   useEffect(() => { load() }, [])
@@ -43,13 +43,13 @@ export default function FamilyDoctor() {
                     </div>
                     <div>
                       <p className="font-semibold">{task.patient_name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{task.reason}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{td(task.reason)}</p>
                     </div>
                   </div>
                   <ZoneBadge zone={task.zone} />
                 </div>
                 <div className="mt-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3 text-sm">
-                  <span className="font-semibold">{t('fd.rec')}: </span>{task.recommendation}
+                  <span className="font-semibold">{t('fd.rec')}: </span>{td(task.recommendation)}
                 </div>
                 <p className="mt-2 text-xs text-slate-400">{fmtDateTime(task.created_at)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">

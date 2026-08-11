@@ -68,7 +68,7 @@ function TwinSection({ patientId }: { patientId: string }) {
 export default function PatientDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { t, zone: zoneT } = useT()
+  const { t, zone: zoneT, td } = useT()
   const [p, setP] = useState<Patient | null>(null)
 
   useEffect(() => { if (id) api.patient(id).then(setP).catch(() => setP(null)) }, [id])
@@ -81,7 +81,7 @@ export default function PatientDetail() {
 
   return (
     <>
-      <TopBar title={p.name} subtitle={`${p.region} · ${p.phone}`} />
+      <TopBar title={p.name} subtitle={`${td(p.region)} · ${p.phone}`} />
       <div className="p-4 md:p-6 space-y-6">
         <button onClick={() => nav(-1)} className="btn-ghost !py-1.5 text-sm">← {t('c.back')}</button>
 
@@ -111,7 +111,7 @@ export default function PatientDetail() {
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/10 text-brand">✦</span>
               <h3 className="font-bold">{t('pd.aiTitle')}</h3>
             </div>
-            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">{a.recommendation}</p>
+            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">{td(a.recommendation)}</p>
             {a.urgent && <div className="mt-3 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs font-semibold text-red-700 dark:text-red-300">⚠ {t('pd.urgent')}</div>}
             <p className="mt-4 text-[11px] text-slate-400">{t('pd.dss')}</p>
           </div>
@@ -120,15 +120,15 @@ export default function PatientDetail() {
         <div className="card p-5">
           <h3 className="font-bold mb-3">{t('pd.historyTitle')}</h3>
           <div className="flex flex-wrap gap-2 mb-4">
-            {p.conditions.map((c) => <span key={c} className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium">{c}</span>)}
-            {p.allergies.map((al) => <span key={al} className="rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-2.5 py-1 text-xs font-medium">{t('pd.allergy')}: {al}</span>)}
+            {p.conditions.map((c) => <span key={c} className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium">{td(c)}</span>)}
+            {p.allergies.map((al) => <span key={al} className="rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-2.5 py-1 text-xs font-medium">{t('pd.allergy')}: {td(al)}</span>)}
             {p.conditions.length === 0 && p.allergies.length === 0 && <span className="text-sm text-slate-400">{t('pd.noHistory')}</span>}
           </div>
           <ol className="relative border-l border-slate-200 dark:border-slate-700 ml-2 space-y-3">
             {p.history.map((h, i) => (
               <li key={i} className="ml-4">
                 <span className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-brand" />
-                <p className="text-sm"><b className="nums">{h.year}</b> — {h.event}</p>
+                <p className="text-sm"><b className="nums">{h.year}</b> — {td(h.event)}</p>
               </li>
             ))}
           </ol>

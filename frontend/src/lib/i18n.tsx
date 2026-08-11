@@ -181,6 +181,53 @@ const D: Record<string, Tr> = {
   'err.connect': { uz: 'Serverga ulanib bo‘lmadi', ru: 'Не удалось подключиться к серверу', en: 'Could not connect to server' },
 }
 
+// Backenddan keladigan MA'LUMOT (data) tarjimasi — cheklangan, aniq to'plam.
+const DATA: Record<string, Tr> = {
+  // region
+  'Navoiy viloyati': { uz: 'Navoiy viloyati', ru: 'Навоийская область', en: 'Navoiy region' },
+  // xavf omillari (risk_engine)
+  "Og'ir gipertenziya": { uz: "Og'ir gipertenziya", ru: 'Тяжёлая гипертензия', en: 'Severe hypertension' },
+  'Gipertenziya': { uz: 'Gipertenziya', ru: 'Гипертензия', en: 'Hypertension' },
+  "Og'ir anemiya": { uz: "Og'ir anemiya", ru: 'Тяжёлая анемия', en: 'Severe anemia' },
+  "O'rtacha anemiya": { uz: "O'rtacha anemiya", ru: 'Умеренная анемия', en: 'Moderate anemia' },
+  'Yengil anemiya': { uz: 'Yengil anemiya', ru: 'Лёгкая анемия', en: 'Mild anemia' },
+  'Yuqori glyukoza': { uz: 'Yuqori glyukoza', ru: 'Высокая глюкоза', en: 'High glucose' },
+  'Gestatsion diabet belgisi': { uz: 'Gestatsion diabet belgisi', ru: 'Признак гестационного диабета', en: 'Gestational diabetes sign' },
+  'Homila harakati kamaygan': { uz: 'Homila harakati kamaygan', ru: 'Снижение шевелений плода', en: 'Reduced fetal movement' },
+  "Ko'rish buzilishi": { uz: "Ko'rish buzilishi", ru: 'Нарушение зрения', en: 'Visual disturbance' },
+  'Preeklampsiya belgilari': { uz: 'Preeklampsiya belgilari', ru: 'Признаки преэклампсии', en: 'Signs of preeclampsia' },
+  "Bosh og'rig'i": { uz: "Bosh og'rig'i", ru: 'Головная боль', en: 'Headache' },
+  "Ko'z oldida parcha": { uz: "Ko'z oldida parcha", ru: 'Мелькание перед глазами', en: 'Visual spots' },
+  "Ko'ngil aynishi": { uz: "Ko'ngil aynishi", ru: 'Тошнота', en: 'Nausea' },
+  "Shish (qo'l/yuz)": { uz: "Shish (qo'l/yuz)", ru: 'Отёки (руки/лицо)', en: 'Swelling (hands/face)' },
+  "Qorin og'rig'i": { uz: "Qorin og'rig'i", ru: 'Боль в животе', en: 'Abdominal pain' },
+  // omil detali (fixed)
+  "Shoshilinch akusher ko'rigi talab etiladi": { uz: "Shoshilinch akusher ko'rigi talab etiladi", ru: 'Требуется срочный акушерский осмотр', en: 'Urgent obstetric exam required' },
+  'Bemor shikoyati': { uz: 'Bemor shikoyati', ru: 'Жалоба пациентки', en: 'Patient complaint' },
+  // surunkali kasalliklar
+  'Surunkali gipertenziya': { uz: 'Surunkali gipertenziya', ru: 'Хроническая гипертензия', en: 'Chronic hypertension' },
+  'Qandli diabet (2-tip)': { uz: 'Qandli diabet (2-tip)', ru: 'Сахарный диабет (2 тип)', en: 'Type 2 diabetes' },
+  'Temir tanqisligi anemiyasi': { uz: 'Temir tanqisligi anemiyasi', ru: 'Железодефицитная анемия', en: 'Iron-deficiency anemia' },
+  'Qalqonsimon bez faoliyati pasayishi': { uz: 'Qalqonsimon bez faoliyati pasayishi', ru: 'Гипотиреоз', en: 'Hypothyroidism' },
+  // allergiya
+  'Penitsillin': { uz: 'Penitsillin', ru: 'Пенициллин', en: 'Penicillin' },
+  'Aspirin': { uz: 'Aspirin', ru: 'Аспирин', en: 'Aspirin' },
+  'Sulfanilamidlar': { uz: 'Sulfanilamidlar', ru: 'Сульфаниламиды', en: 'Sulfonamides' },
+  // tarix (fixed eventlar)
+  "Gipertenziya tashxisi qo'yildi (I bosqich)": { uz: "Gipertenziya tashxisi qo'yildi (I bosqich)", ru: 'Диагностирована гипертензия (I стадия)', en: 'Hypertension diagnosed (stage I)' },
+  "Qon bosimi ko'tarilishi, dori dozasi oshirildi": { uz: "Qon bosimi ko'tarilishi, dori dozasi oshirildi", ru: 'Повышение АД, доза препарата увеличена', en: 'BP rise, drug dose increased' },
+  '2-tip qandli diabet aniqlandi (HbA1c 7.8%)': { uz: '2-tip qandli diabet aniqlandi (HbA1c 7.8%)', ru: 'Выявлен сахарный диабет 2 типа (HbA1c 7.8%)', en: 'Type 2 diabetes found (HbA1c 7.8%)' },
+  'Anemiya, temir preparatlari tayinlandi': { uz: 'Anemiya, temir preparatlari tayinlandi', ru: 'Анемия, назначены препараты железа', en: 'Anemia, iron supplements prescribed' },
+  'Homiladorlik hisobga olindi (antenatal kuzatuv)': { uz: 'Homiladorlik hisobga olindi (antenatal kuzatuv)', ru: 'Беременность взята на учёт (антенатальное наблюдение)', en: 'Pregnancy registered (antenatal care)' },
+  "Joriy homiladorlik — muntazam ko'rik": { uz: "Joriy homiladorlik — muntazam ko'rik", ru: 'Текущая беременность — регулярный осмотр', en: 'Current pregnancy — regular check-up' },
+  // qoida tavsiyalari (risk_engine._safe_recommendation, 5 variant)
+  "Zudlik bilan OvaBMU mutaxassisiga yo'naltiring; bemorni kuzatuvsiz qoldirmang.": { uz: "Zudlik bilan OvaBMU mutaxassisiga yo'naltiring; bemorni kuzatuvsiz qoldirmang.", ru: 'Немедленно направьте к специалисту роддома; не оставляйте пациентку без наблюдения.', en: 'Immediately refer to the maternity specialist; do not leave the patient unmonitored.' },
+  "Zudlik bilan OvaBMU mutaxassisiga yo'naltiring; bemorni kuzatuvsiz qoldirmang. Qon bosimini takroran o'lchang.": { uz: "Zudlik bilan OvaBMU mutaxassisiga yo'naltiring; bemorni kuzatuvsiz qoldirmang. Qon bosimini takroran o'lchang.", ru: 'Немедленно направьте к специалисту роддома; не оставляйте пациентку без наблюдения. Повторно измерьте АД.', en: 'Immediately refer to the maternity specialist; do not leave the patient unmonitored. Re-measure blood pressure.' },
+  "Zudlik bilan OvaBMU mutaxassisiga yo'naltiring; bemorni kuzatuvsiz qoldirmang. Homila harakati va yurak urishini shoshilinch tekshiring.": { uz: "Zudlik bilan OvaBMU mutaxassisiga yo'naltiring; bemorni kuzatuvsiz qoldirmang. Homila harakati va yurak urishini shoshilinch tekshiring.", ru: 'Немедленно направьте к специалисту роддома; не оставляйте пациентку без наблюдения. Срочно проверьте шевеления плода и сердцебиение.', en: 'Immediately refer to the maternity specialist; do not leave the patient unmonitored. Urgently check fetal movement and heart rate.' },
+  "24 soat ichida shifokor ko'rigidan o'tkazing va ko'rsatkichlarni qayta tekshiring.": { uz: "24 soat ichida shifokor ko'rigidan o'tkazing va ko'rsatkichlarni qayta tekshiring.", ru: 'Осмотрите у врача в течение 24 часов и повторно проверьте показатели.', en: 'Have a doctor examine within 24 hours and re-check the indicators.' },
+  "Rejali kuzatuvni davom ettiring; keyingi rejali ko'rik belgilangan muddatда.": { uz: "Rejali kuzatuvni davom ettiring; keyingi rejali ko'rik belgilangan muddatда.", ru: 'Продолжайте плановое наблюдение; следующий плановый осмотр в назначенный срок.', en: 'Continue routine monitoring; next scheduled visit as planned.' },
+}
+
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: 'uz',
   setLang: () => {},
@@ -201,5 +248,6 @@ export function useT() {
   const role = (r: string) => D[`role.${r}`]?.[lang] ?? r
   const sym = (s: string) => D[`sym.${s}`]?.[lang] ?? s
   const twinLevel = (l: string) => D[`twin.level.${l}`]?.[lang] ?? l
-  return { t, zone, role, sym, twinLevel, lang, setLang }
+  const td = (s: string) => DATA[s]?.[lang] ?? s // backend data tarjimasi
+  return { t, zone, role, sym, twinLevel, td, lang, setLang }
 }
