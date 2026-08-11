@@ -11,6 +11,11 @@ frontend/dist/
 frontend/.env
 frontend/.env.local
 
+# Flutter / APK
+*.apk
+mobile/build/
+mobile/.dart_tool/
+
 # Misc
 .DS_Store
 *.log
