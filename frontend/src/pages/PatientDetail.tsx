@@ -85,6 +85,7 @@ export default function PatientDetail() {
   const { t, zone: zoneT, td } = useT()
   const [p, setP] = useState<Patient | null>(null)
   const [traj, setTraj] = useState<{ points: { label: string; value: number }[]; adherence: number } | null>(null)
+  const [discharged, setDischarged] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -118,6 +119,10 @@ export default function PatientDetail() {
           <div className="text-right">
             <ZoneBadge zone={p.current_zone} className="!text-sm !px-3 !py-1.5" />
             <p className="mt-1 text-xs text-slate-400 nums">{t('pd.score')}: {a.score}</p>
+            <button onClick={async () => { await api.discharge(p.id); setDischarged(true) }} disabled={discharged}
+              className="btn-ghost mt-2 !py-1.5 text-xs">
+              {discharged ? '✓ ' + t('pd.discharged') : t('pd.discharge')}
+            </button>
           </div>
         </div>
 

@@ -17,9 +17,25 @@ export default function NurseCapture() {
   const [symptoms, setSymptoms] = useState<string[]>([])
   const [result, setResult] = useState<EncounterResult | null>(null)
   const [busy, setBusy] = useState(false)
+  const [queued, setQueued] = useState(0)
+  const [offlineMsg, setOfflineMsg] = useState(false)
+
+  const getQueue = () => JSON.parse(localStorage.getItem('nc_queue') || '[]')
+  const setQueue = (q: any[]) => { localStorage.setItem('nc_queue', JSON.stringify(q)); setQueued(q.length) }
+
+  const sync = async () => {
+    const q = getQueue()
+    const rest: any[] = []
+    for (const item of q) { try { await api.addEncounter(item) } catch { rest.push(item) } }
+    setQueue(rest)
+  }
 
   useEffect(() => {
     api.patients().then((p) => { setPatients(p); if (p[0]) setPid(p[0].id) })
+    setQueued(getQueue().length)
+    const h = () => sync()
+    window.addEventListener('online', h)
+    return () => window.removeEventListener('online', h)
   }, [])
 
   const num = (v: string) => (v === '' ? null : Number(v))
@@ -27,17 +43,19 @@ export default function NurseCapture() {
 
   const submit = async () => {
     if (!pid) return
-    setBusy(true); setResult(null)
+    setBusy(true); setResult(null); setOfflineMsg(false)
+    const payload = {
+      patient_id: pid,
+      vitals: {
+        bp_sys: num(form.bp_sys), bp_dia: num(form.bp_dia), weight: num(form.weight),
+        hemoglobin: num(form.hemoglobin), glucose: num(form.glucose), gestational_week: num(form.gestational_week),
+      },
+      symptoms, use_llm: true, lang,
+    }
     try {
-      const res = await api.addEncounter({
-        patient_id: pid,
-        vitals: {
-          bp_sys: num(form.bp_sys), bp_dia: num(form.bp_dia), weight: num(form.weight),
-          hemoglobin: num(form.hemoglobin), glucose: num(form.glucose), gestational_week: num(form.gestational_week),
-        },
-        symptoms, use_llm: true, lang,
-      })
-      setResult(res)
+      setResult(await api.addEncounter(payload))
+    } catch {
+      const q = getQueue(); q.push(payload); setQueue(q); setOfflineMsg(true)
     } finally { setBusy(false) }
   }
 
@@ -47,9 +65,16 @@ export default function NurseCapture() {
     <>
       <TopBar title={t('nc.title')} subtitle={t('nc.subtitle')} />
       <div className="mx-auto w-full max-w-xl p-4 md:p-6 space-y-4">
-        <div className="flex items-center gap-2 rounded-xl bg-green-50 dark:bg-green-950/40 px-4 py-2.5 text-sm font-medium text-green-700 dark:text-green-300">
-          <span className="h-2 w-2 rounded-full bg-zone-green" /> {t('nc.synced')}
-        </div>
+        {queued > 0 ? (
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 px-4 py-2.5 text-sm font-medium text-amber-700 dark:text-amber-300">
+            <span>📴 {queued} {t('nc.queued')}</span>
+            <button onClick={sync} className="btn-primary !py-1.5 text-xs">{t('nc.sync')}</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl bg-green-50 dark:bg-green-950/40 px-4 py-2.5 text-sm font-medium text-green-700 dark:text-green-300">
+            <span className="h-2 w-2 rounded-full bg-zone-green" /> {t('nc.synced')}
+          </div>
+        )}
 
         <div className="card p-4">
           <label className="label">{t('nc.selectPatient')}</label>
@@ -91,6 +116,7 @@ export default function NurseCapture() {
         <button onClick={submit} disabled={busy || !pid} className="btn-primary w-full !py-3">
           {busy ? t('nc.analyzing') : t('nc.submit')}
         </button>
+        {offlineMsg && <p className="text-sm font-medium text-amber-600">📴 {t('nc.offlineSaved')}</p>}
 
         {result && (
           <div className="card p-5 animate-pop">

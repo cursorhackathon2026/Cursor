@@ -40,7 +40,8 @@ export const api = {
     post<EncounterResult>('/api/encounters', body),
   alerts: (status?: string) =>
     j<Alert[]>('/api/alerts' + (status ? `?status=${encodeURIComponent(status)}` : '')),
-  ackAlert: (id: string) => post<Alert>(`/api/alerts/${id}/ack`, {}),
+  ackAlert: (id: string, note = '') => post<Alert>(`/api/alerts/${id}/ack`, { note }),
+  discharge: (patient_id: string) => post<Alert>('/api/discharge', { patient_id }),
 
   // digital twin (#12)
   twinEvaluate: (patient_id: string, drug: string, dose: string, lang = 'uz') =>

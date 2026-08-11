@@ -197,16 +197,45 @@ def list_alerts(status: Optional[str] = None):
         return [alert_dict(a) for a in alerts if not status or a.status == status]
 
 
+class AckIn(BaseModel):
+    note: str = ""
+
+
 @app.post("/api/alerts/{aid}/ack")
-def ack_alert(aid: str):
+def ack_alert(aid: str, body: AckIn = AckIn()):
     with get_session() as s:
         a = s.get(Alert, aid)
         if not a:
             raise HTTPException(404, "Ogohlantirish topilmadi")
         a.status = "ko'rildi"
         s.add(a)
+        if body.note.strip():
+            _notify(s, a.patient_id, f"Shifokor izohi: {body.note}", "alert_note")
         s.commit()
         return alert_dict(a)
+
+
+class DischargeIn(BaseModel):
+    patient_id: str
+
+
+@app.post("/api/discharge")
+def discharge(body: DischargeIn):
+    """#11: statsionardan chiqarish -> oilaviy shifokorga aktiv chaqiruv vazifasi."""
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        al = Alert(id=str(uuid.uuid4())[:8], patient_id=p.id, patient_name=p.name,
+                   zone=p.current_zone, reason="OvaBMUdan chiqarildi — aktiv chaqiruv",
+                   recommendation="24 soat ichida bemor holidan xabar oling va tizimda tasdiqlang.",
+                   created_at=datetime.now().isoformat(timespec="minutes"),
+                   status="ochiq", urgent=(p.current_zone == "Qizil"))
+        s.add(al)
+        _notify(s, "oilaviy", f"{p.name}: aktiv chaqiruv (chiqarildi, {p.current_zone})", "discharge")
+        _notify(s, p.id, "Sizni statsionardan chiqarishdi — oilaviy shifokor bog'lanadi", "discharge")
+        s.commit()
+        return alert_dict(al)
 
 
 # ================= DIGITAL TWIN (#12) =================

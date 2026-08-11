@@ -109,6 +109,12 @@ const D: Record<string, Tr> = {
   'twin.schedule': { uz: 'Qabul jadvali (masalan: 2 marta/kun)', ru: 'График приёма (напр.: 2 раза/день)', en: 'Schedule (e.g. twice a day)' },
   'pd.trajectory': { uz: 'Xavf prognozi (6 oy)', ru: 'Прогноз риска (6 мес)', en: 'Risk forecast (6 mo)' },
   'pd.adhLabel': { uz: 'Dori intizomi', ru: 'Приверженность', en: 'Adherence' },
+  'pd.discharge': { uz: 'Chiqarish → oilaviy chaqiruv', ru: 'Выписать → семейный врач', en: 'Discharge → family doctor' },
+  'pd.discharged': { uz: 'Chaqiruv yuborildi', ru: 'Вызов отправлен', en: 'Referral sent' },
+  'al.notePh': { uz: 'Izoh (ixtiyoriy)', ru: 'Комментарий (необязательно)', en: 'Note (optional)' },
+  'nc.offlineSaved': { uz: 'Oflayn saqlandi — ulanganda yuboriladi', ru: 'Сохранено офлайн — отправится при подключении', en: 'Saved offline — will sync when online' },
+  'nc.queued': { uz: 'Navbatda', ru: 'В очереди', en: 'Queued' },
+  'nc.sync': { uz: 'Sinxronlash', ru: 'Синхронизировать', en: 'Sync' },
 
   // nurse capture
   'nc.title': { uz: 'Ko‘rik qo‘shish', ru: 'Добавить осмотр', en: 'Add visit' },

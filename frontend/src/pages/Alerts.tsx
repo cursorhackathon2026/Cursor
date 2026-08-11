@@ -9,13 +9,14 @@ import { useT } from '../lib/i18n'
 export default function Alerts() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [onlyOpen, setOnlyOpen] = useState(true)
+  const [notes, setNotes] = useState<Record<string, string>>({})
   const { t, td } = useT()
 
   const load = () => api.alerts().then(setAlerts)
   useEffect(() => { load() }, [])
 
   const ack = async (id: string) => {
-    await api.ackAlert(id)
+    await api.ackAlert(id, notes[id] || '')
     setAlerts((a) => a.map((x) => (x.id === id ? { ...x, status: "ko'rildi" } : x)))
   }
 
@@ -52,9 +53,13 @@ export default function Alerts() {
                   <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{td(a.reason)}</p>
                   <p className="mt-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 p-2.5 text-sm">{td(a.recommendation)}</p>
                   <div className="mt-3">
-                    {a.status === 'ochiq'
-                      ? <button onClick={() => ack(a.id)} className="btn-primary !py-2 text-sm">✓ {t('al.ack')}</button>
-                      : <span className="text-sm font-medium text-green-600">✓ {t('al.seen')}</span>}
+                    {a.status === 'ochiq' ? (
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <input className="input" placeholder={t('al.notePh')}
+                          value={notes[a.id] || ''} onChange={(e) => setNotes({ ...notes, [a.id]: e.target.value })} />
+                        <button onClick={() => ack(a.id)} className="btn-primary !py-2 text-sm whitespace-nowrap">✓ {t('al.ack')}</button>
+                      </div>
+                    ) : <span className="text-sm font-medium text-green-600">✓ {t('al.seen')}</span>}
                   </div>
                 </div>
               </div>
