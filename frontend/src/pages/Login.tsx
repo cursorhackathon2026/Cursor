@@ -139,10 +139,6 @@ export default function Login() {
           <div className="absolute -left-4 top-6 z-20 hidden rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-semibold shadow-xl backdrop-blur animate-floaty dark:border-slate-700 dark:bg-slate-800/90 sm:block">
             <span className="text-brand">✦</span> AI tahlil · 140 ball
           </div>
-          <div className="absolute -right-3 bottom-24 z-20 hidden rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-semibold shadow-xl backdrop-blur animate-floaty2 dark:border-slate-700 dark:bg-slate-800/90 sm:flex sm:items-center sm:gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-zone-red" /> Qizil zona · ogohlantirish
-          </div>
-
           <form onSubmit={submit} className="card relative z-10 p-6 shadow-2xl shadow-brand/10">
             <div className="mb-4 text-center">
               <h2 className="font-display text-xl font-extrabold">MedAI</h2>
