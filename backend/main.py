@@ -455,3 +455,47 @@ def adherence():
             out.append({"id": p.id, "name": p.name, "zone": p.current_zone, "taken": taken, "total": total})
         out.sort(key=lambda x: (x["total"] - x["taken"]), reverse=True)
         return out
+
+
+# ================= FAZA 4: #12 to'liq halqa =================
+class PrescriptionIn(BaseModel):
+    patient_id: str
+    name: str
+    dose: str = ""
+    schedule: str = "1 marta/kun"
+
+
+@app.post("/api/prescriptions")
+def prescribe(body: PrescriptionIn):
+    """Shifokor egizak tekshiruvidan so'ng retsept beradi -> bemor dorisi bo'ladi."""
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        existing = s.exec(select(Medication).where(Medication.patient_id == p.id)).all()
+        med = Medication(patient_id=p.id, mid=f"m{len(existing) + 1}", name=body.name,
+                         dose=body.dose, schedule=body.schedule, taken_today=False)
+        s.add(med)
+        _notify(s, p.id, f"Yangi retsept: {body.name} {body.dose} ({body.schedule})", "prescription")
+        s.commit()
+        return {"id": med.mid, "name": med.name, "dose": med.dose, "schedule": med.schedule, "taken_today": False}
+
+
+@app.get("/api/twin/trajectory")
+def trajectory(patient_id: str):
+    """Soddalashtirilgan xavf-prognozi (6 oy) — adherence ta'sirini ko'rsatadi."""
+    with get_session() as s:
+        p = s.get(Patient, patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        last = s.exec(select(Encounter).where(Encounter.patient_id == p.id).order_by(Encounter.id.desc())).first()
+        base = min(100, last.assessment.get("score", 0)) if last else 0
+        base = max(20, base)
+        meds = s.exec(select(Medication).where(Medication.patient_id == p.id)).all()
+        adh = (sum(1 for m in meds if m.taken_today) / len(meds)) if meds else 0.5
+        slope = -7 if adh >= 0.7 else (9 if adh < 0.34 else 1)
+        pts, v = [], base
+        for m in range(7):
+            pts.append({"label": "Hozir" if m == 0 else f"+{m}", "value": max(5, min(100, round(v)))})
+            v += slope
+        return {"points": pts, "adherence": round(adh * 100)}

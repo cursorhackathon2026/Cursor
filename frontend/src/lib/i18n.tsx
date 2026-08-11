@@ -104,6 +104,11 @@ const D: Record<string, Tr> = {
   'twin.level.Xavfsiz': { uz: 'Xavfsiz', ru: 'Безопасно', en: 'Safe' },
   'twin.level.Ehtiyot': { uz: 'Ehtiyot', ru: 'Осторожно', en: 'Caution' },
   'twin.level.Xavfli': { uz: 'Xavfli', ru: 'Опасно', en: 'Danger' },
+  'twin.prescribe': { uz: 'Retsept berish', ru: 'Назначить', en: 'Prescribe' },
+  'twin.prescribed': { uz: 'Retsept berildi — bemor ilovasiga tushdi', ru: 'Назначено — отправлено пациенту', en: 'Prescribed — sent to patient app' },
+  'twin.schedule': { uz: 'Qabul jadvali (masalan: 2 marta/kun)', ru: 'График приёма (напр.: 2 раза/день)', en: 'Schedule (e.g. twice a day)' },
+  'pd.trajectory': { uz: 'Xavf prognozi (6 oy)', ru: 'Прогноз риска (6 мес)', en: 'Risk forecast (6 mo)' },
+  'pd.adhLabel': { uz: 'Dori intizomi', ru: 'Приверженность', en: 'Adherence' },
 
   // nurse capture
   'nc.title': { uz: 'Ko‘rik qo‘shish', ru: 'Добавить осмотр', en: 'Add visit' },

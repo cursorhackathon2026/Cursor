@@ -78,4 +78,10 @@ export const api = {
   replyReport: (id: string, reply: string) =>
     post<{ ok: boolean }>(`/api/reports/${id}/reply`, { reply }),
   adherence: () => j<Adherence[]>('/api/adherence'),
+
+  // FAZA 4: #12 to'liq halqa
+  prescribe: (patient_id: string, name: string, dose: string, schedule: string) =>
+    post<Medication>('/api/prescriptions', { patient_id, name, dose, schedule }),
+  trajectory: (patient_id: string) =>
+    j<{ points: { label: string; value: number }[]; adherence: number }>(`/api/twin/trajectory?patient_id=${patient_id}`),
 }

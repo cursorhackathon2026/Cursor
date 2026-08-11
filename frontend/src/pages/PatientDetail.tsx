@@ -23,11 +23,18 @@ function TwinSection({ patientId }: { patientId: string }) {
   const [dose, setDose] = useState('')
   const [res, setRes] = useState<TwinResult | null>(null)
   const [busy, setBusy] = useState(false)
+  const [sched, setSched] = useState('')
+  const [prescribed, setPrescribed] = useState(false)
 
   const run = async () => {
     if (!drug.trim()) return
-    setBusy(true); setRes(null)
+    setBusy(true); setRes(null); setPrescribed(false)
     try { setRes(await api.twinEvaluate(patientId, drug, dose, lang)) } finally { setBusy(false) }
+  }
+
+  const prescribe = async () => {
+    await api.prescribe(patientId, drug, dose, sched || '1 marta/kun')
+    setPrescribed(true)
   }
 
   const st = res ? TWIN_STYLE[res.level] ?? TWIN_STYLE.Ehtiyot : null
@@ -59,6 +66,13 @@ function TwinSection({ patientId }: { patientId: string }) {
           <p className="mt-3 text-[11px] text-slate-400">
             {res.ai ? '✦ ' + t('twin.aiBadge') : t('twin.ruleBadge')} · {t('pd.dss').replace('* ', '')}
           </p>
+          {/* Retsept berish — #12 to'liq halqa */}
+          <div className="mt-3 flex flex-col gap-2 border-t border-black/5 pt-3 dark:border-white/10 sm:flex-row">
+            <input className="input" placeholder={t('twin.schedule')} value={sched} onChange={(e) => setSched(e.target.value)} />
+            <button onClick={prescribe} disabled={prescribed} className="btn-primary whitespace-nowrap">
+              {prescribed ? '✓ ' + t('twin.prescribed') : t('twin.prescribe')}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -70,8 +84,14 @@ export default function PatientDetail() {
   const nav = useNavigate()
   const { t, zone: zoneT, td } = useT()
   const [p, setP] = useState<Patient | null>(null)
+  const [traj, setTraj] = useState<{ points: { label: string; value: number }[]; adherence: number } | null>(null)
 
-  useEffect(() => { if (id) api.patient(id).then(setP).catch(() => setP(null)) }, [id])
+  useEffect(() => {
+    if (id) {
+      api.patient(id).then(setP).catch(() => setP(null))
+      api.trajectory(id).then(setTraj).catch(() => {})
+    }
+  }, [id])
 
   if (!p) return (<><TopBar title={t('role.bemor')} /><div className="p-6 text-slate-400">{t('c.loading')}</div></>)
 
@@ -135,6 +155,10 @@ export default function PatientDetail() {
         </div>
 
         <TwinSection patientId={p.id} />
+
+        {traj && (
+          <TrendChart title={`${t('pd.trajectory')} · ${t('pd.adhLabel')} ${traj.adherence}%`} unit="%" points={traj.points} />
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TrendChart title={t('nc.bp')} unit="mmHg" points={series('bp_sys')} threshold={140} thresholdLabel="140" />
