@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
-import type { Patient } from '../lib/types'
+import type { Patient, TwinResult } from '../lib/types'
 import { TopBar } from '../components/TopBar'
 import { ZoneBadge } from '../components/ZoneBadge'
 import { FactorBars } from '../components/FactorBars'
@@ -13,6 +13,71 @@ const short = (iso: string) => {
   return `${d.getDate()}.${d.getMonth() + 1}`
 }
 
+const TWIN_STYLE: Record<string, { bg: string; text: string; icon: string }> = {
+  Xavfsiz: { bg: 'bg-green-50 dark:bg-green-950/40', text: 'text-green-700 dark:text-green-300', icon: '✓' },
+  Ehtiyot: { bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300', icon: '◆' },
+  Xavfli: { bg: 'bg-red-50 dark:bg-red-950/40', text: 'text-red-700 dark:text-red-300', icon: '⚠' },
+}
+
+function TwinSection({ patientId }: { patientId: string }) {
+  const [drug, setDrug] = useState('')
+  const [dose, setDose] = useState('')
+  const [res, setRes] = useState<TwinResult | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const run = async () => {
+    if (!drug.trim()) return
+    setBusy(true)
+    setRes(null)
+    try {
+      setRes(await api.twinEvaluate(patientId, drug, dose))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const st = res ? TWIN_STYLE[res.level] ?? TWIN_STYLE.Ehtiyot : null
+  return (
+    <div className="card p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/10 text-brand">✦</span>
+        <h3 className="font-bold">Raqamli egizak — dori xavfsizligini tekshirish</h3>
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+        Dori belgilashдан oldin tekshiring: AI bemorning kasallik tarixi, allergiya va homiladorligiga qarab xavfni baholaydi.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input className="input" placeholder="Dori nomi (masalan: Enalapril)" value={drug} onChange={(e) => setDrug(e.target.value)} />
+        <input className="input sm:max-w-40" placeholder="Doza" value={dose} onChange={(e) => setDose(e.target.value)} />
+        <button onClick={run} disabled={busy || !drug.trim()} className="btn-primary whitespace-nowrap">
+          {busy ? 'Tekshirilmoqda…' : 'Egizakда tekshirish'}
+        </button>
+      </div>
+
+      {res && st && (
+        <div className={`mt-4 rounded-xl p-4 animate-pop ${st.bg}`}>
+          <div className="flex items-center gap-2">
+            <span className={`text-lg ${st.text}`}>{st.icon}</span>
+            <span className={`font-bold ${st.text}`}>{res.level}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">— {res.drug} {res.dose}</span>
+          </div>
+          <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{res.summary}</p>
+          {res.warnings.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {res.warnings.map((w, i) => (
+                <li key={i} className={`text-sm ${st.text}`}>• {w}</li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-3 text-[11px] text-slate-400">
+            {res.ai ? '✦ AI baholovi' : 'Qoida asosidagi baholov'} · Qaror qo‘llab-quvvatlash. Yakuniy qaror shifokorda.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function PatientDetail() {
   const { id } = useParams()
   const nav = useNavigate()
@@ -22,21 +87,18 @@ export default function PatientDetail() {
     if (id) api.patient(id).then(setP).catch(() => setP(null))
   }, [id])
 
-  if (!p)
+  if (!p) {
     return (
       <>
         <TopBar title="Bemor" />
         <div className="p-6 text-slate-400">Yuklanmoqda…</div>
       </>
     )
+  }
 
-  const last = p.encounters[p.encounters.length - 1]
-  const a = last.assessment
-
+  const a = p.encounters[p.encounters.length - 1].assessment
   const series = (key: 'bp_sys' | 'hemoglobin' | 'glucose') =>
-    p.encounters
-      .filter((e) => e.vitals[key] != null)
-      .map((e) => ({ label: short(e.ts), value: Number(e.vitals[key]) }))
+    p.encounters.filter((e) => e.vitals[key] != null).map((e) => ({ label: short(e.ts), value: Number(e.vitals[key]) }))
 
   return (
     <>
@@ -52,9 +114,7 @@ export default function PatientDetail() {
             </div>
             <div>
               <h2 className="text-xl font-bold">{p.name}</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 nums">
-                {p.age} yosh · {p.gestational_week} hafta homilalik
-              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 nums">{p.age} yosh · {p.gestational_week} hafta homilalik</p>
             </div>
           </div>
           <div className="text-right">
@@ -64,13 +124,10 @@ export default function PatientDetail() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Nega bu zona */}
           <div className="card p-5">
             <h3 className="font-bold mb-4">Xavf omillari — nega «{p.current_zone}»</h3>
             <FactorBars factors={a.factors} />
           </div>
-
-          {/* AI tavsiya */}
           <div className="card p-5">
             <div className="flex items-center gap-2 mb-3">
               <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/10 text-brand">✦</span>
@@ -82,11 +139,36 @@ export default function PatientDetail() {
                 ⚠ Shoshilinch — kechiktirmang
               </div>
             )}
-            <p className="mt-4 text-[11px] text-slate-400">
-              * Qaror qo‘llab-quvvatlash. Yakuniy qaror shifokorda.
-            </p>
+            <p className="mt-4 text-[11px] text-slate-400">* Qaror qo‘llab-quvvatlash. Yakuniy qaror shifokorda.</p>
           </div>
         </div>
+
+        {/* Kasallik tarixi va allergiya */}
+        <div className="card p-5">
+          <h3 className="font-bold mb-3">Kasallik tarixi va allergiya</h3>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {p.conditions.map((c) => (
+              <span key={c} className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium">{c}</span>
+            ))}
+            {p.allergies.map((al) => (
+              <span key={al} className="rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 px-2.5 py-1 text-xs font-medium">Allergiya: {al}</span>
+            ))}
+            {p.conditions.length === 0 && p.allergies.length === 0 && (
+              <span className="text-sm text-slate-400">Surunkali kasallik/allergiya qayd etilmagan</span>
+            )}
+          </div>
+          <ol className="relative border-l border-slate-200 dark:border-slate-700 ml-2 space-y-3">
+            {p.history.map((h, i) => (
+              <li key={i} className="ml-4">
+                <span className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-brand" />
+                <p className="text-sm"><b className="nums">{h.year}</b> — {h.event}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Digital Twin (#12) */}
+        <TwinSection patientId={p.id} />
 
         {/* Trend grafiklar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

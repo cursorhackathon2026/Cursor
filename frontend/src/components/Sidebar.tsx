@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { getRole, clearRole, ROLE_LABEL, type Role } from '../lib/store'
+import { getSession, clearSession, ROLE_LABEL, type Role } from '../lib/store'
 
 const NAV: Record<Role, { to: string; label: string; icon: string }[]> = {
   mutaxassis: [
@@ -11,10 +11,12 @@ const NAV: Record<Role, { to: string; label: string; icon: string }[]> = {
     { to: '/alerts', label: 'Ogohlantirishlar', icon: '🔔' },
   ],
   hamshira: [{ to: '/capture', label: 'Ko‘rik qo‘shish', icon: '➕' }],
+  bemor: [{ to: '/patient', label: 'Mening sahifam', icon: '🏠' }],
 }
 
 export function Sidebar() {
-  const role = getRole() as Role
+  const session = getSession()
+  const role = (session?.role ?? 'mutaxassis') as Role
   const nav = useNavigate()
   const items = NAV[role] ?? []
   return (
@@ -45,12 +47,10 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="border-t border-slate-200 dark:border-slate-800 p-3">
-        <p className="px-2 text-xs text-slate-400">{ROLE_LABEL[role]}</p>
+        <p className="px-2 text-xs font-medium truncate">{session?.name}</p>
+        <p className="px-2 text-[11px] text-slate-400">{ROLE_LABEL[role]}</p>
         <button
-          onClick={() => {
-            clearRole()
-            nav('/')
-          }}
+          onClick={() => { clearSession(); nav('/') }}
           className="mt-1 w-full btn-ghost !justify-start !py-2 text-sm"
         >
           ⏻ Chiqish

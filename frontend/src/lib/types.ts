@@ -41,6 +41,27 @@ export interface PatientListItem {
   updated_at: string
 }
 
+export interface Medication {
+  id: string
+  name: string
+  dose: string
+  schedule: string
+  taken_today: boolean
+}
+
+export interface HistoryItem {
+  year: number
+  event: string
+}
+
+export interface Appointment {
+  id: string
+  date: string
+  reason: string
+  status: string
+  created_at: string
+}
+
 export interface Patient {
   id: string
   name: string
@@ -48,9 +69,15 @@ export interface Patient {
   gestational_week: number
   phone: string
   region: string
+  conditions: string[]
+  allergies: string[]
+  history: HistoryItem[]
+  medications: Medication[]
   encounters: Encounter[]
   current_zone: Zone
   updated_at: string
+  appointments: Appointment[]
+  lifestyle_log: { title: string; ts: string }[]
 }
 
 export interface Alert {
@@ -72,4 +99,24 @@ export interface Stats {
   yashil: number
   open_alerts: number
   region: string
+}
+
+export interface LifestyleRec {
+  title: string
+  detail: string
+}
+
+export interface TwinResult {
+  level: 'Xavfsiz' | 'Ehtiyot' | 'Xavfli'
+  warnings: string[]
+  summary: string
+  ai: boolean
+  drug?: string
+  dose?: string
+}
+
+export interface LoginResult {
+  role: 'hamshira' | 'mutaxassis' | 'oilaviy' | 'bemor'
+  name: string
+  patient_id: string | null
 }
