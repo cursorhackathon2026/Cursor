@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import type { Patient, TwinResult } from '../lib/types'
@@ -8,6 +8,8 @@ import { FactorBars } from '../components/FactorBars'
 import { TrendChart } from '../components/TrendChart'
 import { fmtDateTime } from '../lib/format'
 import { useT } from '../lib/i18n'
+
+const TwinBody = lazy(() => import('../components/TwinBody').then((m) => ({ default: m.TwinBody })))
 
 const short = (iso: string) => { const d = new Date(iso); return `${d.getDate()}.${d.getMonth() + 1}` }
 
@@ -140,6 +142,15 @@ export default function PatientDetail() {
             {a.urgent && <div className="mt-3 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs font-semibold text-red-700 dark:text-red-300">⚠ {t('pd.urgent')}</div>}
             <p className="mt-4 text-[11px] text-slate-400">{t('pd.dss')}</p>
           </div>
+        </div>
+
+        {/* 3D egizak tana */}
+        <div className="card p-5">
+          <h3 className="mb-1 font-bold">🧍 {t('body.title')}</h3>
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">{t('body.desc')} · {t('body.rotate')}</p>
+          <Suspense fallback={<div className="grid h-80 place-items-center text-sm text-slate-400">3D…</div>}>
+            <TwinBody patient={p} />
+          </Suspense>
         </div>
 
         <div className="card p-5">
