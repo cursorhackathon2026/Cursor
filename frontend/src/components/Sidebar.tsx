@@ -1,0 +1,61 @@
+import { NavLink, useNavigate } from 'react-router-dom'
+import { getRole, clearRole, ROLE_LABEL, type Role } from '../lib/store'
+
+const NAV: Record<Role, { to: string; label: string; icon: string }[]> = {
+  mutaxassis: [
+    { to: '/dashboard', label: 'Bosh sahifa', icon: '▦' },
+    { to: '/alerts', label: 'Ogohlantirishlar', icon: '🔔' },
+  ],
+  oilaviy: [
+    { to: '/followup', label: 'Aktiv chaqiruv', icon: '📞' },
+    { to: '/alerts', label: 'Ogohlantirishlar', icon: '🔔' },
+  ],
+  hamshira: [{ to: '/capture', label: 'Ko‘rik qo‘shish', icon: '➕' }],
+}
+
+export function Sidebar() {
+  const role = getRole() as Role
+  const nav = useNavigate()
+  const items = NAV[role] ?? []
+  return (
+    <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div className="flex items-center gap-2 px-5 h-16 border-b border-slate-200 dark:border-slate-800">
+        <div className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white font-bold">P</div>
+        <div>
+          <p className="text-sm font-bold leading-tight">Perinatal</p>
+          <p className="text-[11px] text-slate-400 leading-tight">Monitoring</p>
+        </div>
+      </div>
+      <nav className="flex-1 p-3 space-y-1">
+        {items.map((it) => (
+          <NavLink
+            key={it.to}
+            to={it.to}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-brand/10 text-brand'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`
+            }
+          >
+            <span aria-hidden>{it.icon}</span>
+            {it.label}
+          </NavLink>
+        ))}
+      </nav>
+      <div className="border-t border-slate-200 dark:border-slate-800 p-3">
+        <p className="px-2 text-xs text-slate-400">{ROLE_LABEL[role]}</p>
+        <button
+          onClick={() => {
+            clearRole()
+            nav('/')
+          }}
+          className="mt-1 w-full btn-ghost !justify-start !py-2 text-sm"
+        >
+          ⏻ Chiqish
+        </button>
+      </div>
+    </aside>
+  )
+}
