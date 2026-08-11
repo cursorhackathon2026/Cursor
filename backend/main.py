@@ -51,12 +51,14 @@ def patient_dict(s, p: Patient) -> dict:
     appts = s.exec(select(Appointment).where(Appointment.patient_id == p.id)).all()
     life = s.exec(select(LifestyleLog).where(LifestyleLog.patient_id == p.id).order_by(LifestyleLog.id.desc())).all()
     return {
-        "id": p.id, "name": p.name, "age": p.age, "gestational_week": p.gestational_week,
+        "id": p.id, "name": p.name, "age": p.age, "gender": p.gender,
+        "gestational_week": p.gestational_week,
         "phone": p.phone, "region": p.region, "conditions": p.conditions,
         "allergies": p.allergies, "history": p.history, "current_zone": p.current_zone,
         "updated_at": p.updated_at,
         "encounters": [{"ts": e.ts, "vitals": e.vitals, "symptoms": e.symptoms, "assessment": e.assessment} for e in encs],
-        "medications": [{"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today} for m in meds],
+        "medications": [{"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule,
+                         "kind": m.kind, "rationale": m.rationale, "taken_today": m.taken_today} for m in meds],
         "appointments": [{"id": a.id, "doctor": a.doctor, "date": a.date, "time": a.time, "reason": a.reason, "status": a.status, "created_at": a.created_at} for a in appts],
         "lifestyle_log": [{"title": l.title, "ts": l.ts} for l in life],
     }
@@ -129,9 +131,9 @@ def list_patients(zone: Optional[str] = None):
                 continue
             last = s.exec(select(Encounter).where(Encounter.patient_id == p.id).order_by(Encounter.id.desc())).first()
             reason = last.assessment.get("factors", [])[:1] if last else []
-            items.append({"id": p.id, "name": p.name, "age": p.age,
+            items.append({"id": p.id, "name": p.name, "age": p.age, "gender": p.gender,
                           "gestational_week": p.gestational_week, "zone": p.current_zone,
-                          "reason": reason, "updated_at": p.updated_at})
+                          "conditions": p.conditions, "reason": reason, "updated_at": p.updated_at})
         items.sort(key=lambda x: (_ORDER.get(x["zone"], 9), x["updated_at"]), reverse=True)
         return items
 
@@ -148,6 +150,9 @@ def get_patient(pid: str):
 class Vitals(BaseModel):
     bp_sys: Optional[int] = None
     bp_dia: Optional[int] = None
+    pulse: Optional[int] = None
+    spo2: Optional[int] = None
+    temperature: Optional[float] = None
     hemoglobin: Optional[int] = None
     glucose: Optional[float] = None
     weight: Optional[float] = None
@@ -169,7 +174,7 @@ def add_encounter(e: EncounterIn):
         if not p:
             raise HTTPException(404, "Bemor topilmadi")
         v = e.vitals.model_dump()
-        a = risk_engine.assess(v, e.symptoms).to_dict()
+        a = risk_engine.assess(v, e.symptoms, p.conditions).to_dict()
         if e.use_llm:
             a["recommendation"] = llm.enrich_recommendation(a["zone"], a["factors"], a["recommendation"], e.lang)
         now = datetime.now().isoformat(timespec="minutes")
@@ -291,11 +296,16 @@ def lifestyle_accept(body: LifestyleAccept):
 
 
 # ================= BEMOR PORTALI =================
+def _med_dict(m: Medication) -> dict:
+    return {"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule,
+            "kind": m.kind, "rationale": m.rationale, "taken_today": m.taken_today}
+
+
 @app.get("/api/medications")
 def get_medications(patient_id: str):
     with get_session() as s:
         meds = s.exec(select(Medication).where(Medication.patient_id == patient_id).order_by(Medication.id)).all()
-        return [{"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today} for m in meds]
+        return [_med_dict(m) for m in meds]
 
 
 class MedToggle(BaseModel):
@@ -313,7 +323,7 @@ def toggle_medication(body: MedToggle):
         m.taken_today = body.taken
         s.add(m)
         s.commit()
-        return {"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today}
+        return _med_dict(m)
 
 
 def _appt_dict(a: Appointment) -> dict:
@@ -492,22 +502,110 @@ class PrescriptionIn(BaseModel):
     name: str
     dose: str = ""
     schedule: str = "1 marta/kun"
+    kind: str = "dori"
+    rationale: str = ""
 
 
 @app.post("/api/prescriptions")
 def prescribe(body: PrescriptionIn):
-    """Shifokor egizak tekshiruvidan so'ng retsept beradi -> bemor dorisi bo'ladi."""
+    """Shifokor bitta retsept beradi -> bemor dorisi bo'ladi."""
     with get_session() as s:
         p = s.get(Patient, body.patient_id)
         if not p:
             raise HTTPException(404, "Bemor topilmadi")
         existing = s.exec(select(Medication).where(Medication.patient_id == p.id)).all()
         med = Medication(patient_id=p.id, mid=f"m{len(existing) + 1}", name=body.name,
-                         dose=body.dose, schedule=body.schedule, taken_today=False)
+                         dose=body.dose, schedule=body.schedule, kind=body.kind,
+                         rationale=body.rationale, taken_today=False)
         s.add(med)
         _notify(s, p.id, f"Yangi retsept: {body.name} {body.dose} ({body.schedule})", "prescription")
         s.commit()
-        return {"id": med.mid, "name": med.name, "dose": med.dose, "schedule": med.schedule, "taken_today": False}
+        return _med_dict(med)
+
+
+# ================= AI PROGNOZ (5 yillik) =================
+@app.get("/api/prognosis")
+def prognosis(patient_id: str, lang: str = "uz"):
+    with get_session() as s:
+        p = s.get(Patient, patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        return llm.prognose(patient_dict(s, p), lang)
+
+
+# ================= AI DAVOLASH REJASI (назначение) =================
+class PlanGenIn(BaseModel):
+    patient_id: str
+    diagnosis: str = ""
+    lang: str = "uz"
+
+
+@app.post("/api/treatment/generate")
+def treatment_generate(body: PlanGenIn):
+    """Diagnoz + bemor holatiга qarab optimal davolash rejasini AI generatsiya qiladi (taklif)."""
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        return llm.generate_treatment_plan(patient_dict(s, p), body.diagnosis, body.lang)
+
+
+class PlanItem(BaseModel):
+    kind: str = "dori"
+    name: str
+    dose: str = ""
+    schedule: str = ""
+    rationale: str = ""
+
+
+class ConsequenceIn(BaseModel):
+    patient_id: str
+    original: PlanItem
+    changed: PlanItem
+    lang: str = "uz"
+
+
+@app.post("/api/treatment/consequence")
+def treatment_consequence(body: ConsequenceIn):
+    """Shifokor bandni o'zgartirganда — oqibatini AI izohlaydi."""
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        text = llm.edit_consequence(patient_dict(s, p),
+                                    body.original.model_dump(), body.changed.model_dump(), body.lang)
+        return {"consequence": text}
+
+
+class ConfirmIn(BaseModel):
+    patient_id: str
+    diagnosis: str = ""
+    items: list[PlanItem]
+
+
+@app.post("/api/treatment/confirm")
+def treatment_confirm(body: ConfirmIn):
+    """Shifokor tasdiqlaydi -> bemorning davolash rejasi bo'ladi + bildirishnoma + kunlik eslatma."""
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        # yangi tasdiqlangan reja eski dorilar o'rnini bosadi
+        for m in s.exec(select(Medication).where(Medication.patient_id == p.id)).all():
+            s.delete(m)
+        created = []
+        for i, it in enumerate(body.items):
+            m = Medication(patient_id=p.id, mid=f"m{i+1}", name=it.name, dose=it.dose,
+                           schedule=it.schedule or "1 marta/kun", kind=it.kind,
+                           rationale=it.rationale, taken_today=False)
+            s.add(m)
+            created.append(m)
+        n = len(created)
+        _notify(s, p.id, f"Shifokor davolash rejasini tasdiqladi: {n} ta tayinlov. Har kuni eslatma keladi.", "prescription")
+        if body.diagnosis:
+            _notify(s, p.id, f"Tashxis: {body.diagnosis}", "diagnosis")
+        s.commit()
+        return {"ok": True, "count": n, "medications": [_med_dict(m) for m in created]}
 
 
 @app.get("/api/twin/trajectory")

@@ -8,6 +8,8 @@ import { FactorBars } from '../components/FactorBars'
 import { TrendChart } from '../components/TrendChart'
 import { fmtDateTime } from '../lib/format'
 import { useT } from '../lib/i18n'
+import { PrognosisCard } from '../components/PrognosisCard'
+import { TreatmentPlanner } from '../components/TreatmentPlanner'
 
 const TwinBody = lazy(() => import('../components/TwinBody').then((m) => ({ default: m.TwinBody })))
 
@@ -89,12 +91,12 @@ export default function PatientDetail() {
   const [traj, setTraj] = useState<{ points: { label: string; value: number }[]; adherence: number } | null>(null)
   const [discharged, setDischarged] = useState(false)
 
-  useEffect(() => {
-    if (id) {
-      api.patient(id).then(setP).catch(() => setP(null))
-      api.trajectory(id).then(setTraj).catch(() => {})
-    }
-  }, [id])
+  const load = () => {
+    if (!id) return
+    api.patient(id).then(setP).catch(() => setP(null))
+    api.trajectory(id).then(setTraj).catch(() => {})
+  }
+  useEffect(load, [id])
 
   if (!p) return (<><TopBar title={t('role.bemor')} /><div className="p-6 text-slate-400">{t('c.loading')}</div></>)
 
@@ -115,7 +117,17 @@ export default function PatientDetail() {
             </div>
             <div>
               <h2 className="text-xl font-bold">{p.name}</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 nums">{p.age} {t('pd.years')} · {p.gestational_week} {t('pd.weekHomilalik')}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 nums">
+                {p.age} {t('pd.years')} · {t('g.' + (p.gender || 'F'))}
+                {p.gestational_week ? ` · ${p.gestational_week} ${t('pd.weekHomilalik')}` : ''}
+              </p>
+              {p.conditions.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {p.conditions.map((c) => (
+                    <span key={c} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium dark:bg-slate-800">{td(c)}</span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="text-right">
@@ -144,6 +156,9 @@ export default function PatientDetail() {
           </div>
         </div>
 
+        {/* AI 5-yillik prognoz */}
+        <PrognosisCard patientId={p.id} />
+
         {/* 3D egizak tana */}
         <div className="card p-5">
           <h3 className="mb-1 font-bold">🧍 {t('body.title')}</h3>
@@ -152,6 +167,9 @@ export default function PatientDetail() {
             <TwinBody patient={p} />
           </Suspense>
         </div>
+
+        {/* AI optimal davolash rejasi (назначение) */}
+        <TreatmentPlanner patientId={p.id} onConfirmed={load} />
 
         <div className="card p-5">
           <h3 className="font-bold mb-3">{t('pd.historyTitle')}</h3>

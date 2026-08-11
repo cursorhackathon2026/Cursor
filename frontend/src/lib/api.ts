@@ -1,7 +1,7 @@
 import type {
   Stats, PatientListItem, Patient, Alert, Assessment, Vitals, Zone,
   Medication, LifestyleRec, TwinResult, Appointment, LoginResult, Doctor, Slot,
-  Notif, ReportItem, Adherence,
+  Notif, ReportItem, Adherence, Prognosis, TreatmentPlan, PlanItem,
 } from './types'
 
 const BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000'
@@ -85,4 +85,14 @@ export const api = {
     post<Medication>('/api/prescriptions', { patient_id, name, dose, schedule }),
   trajectory: (patient_id: string) =>
     j<{ points: { label: string; value: number }[]; adherence: number }>(`/api/twin/trajectory?patient_id=${patient_id}`),
+
+  // AI prognoz + optimal davolash rejasi (назначение)
+  prognosis: (patient_id: string, lang = 'uz') =>
+    j<Prognosis>(`/api/prognosis?patient_id=${patient_id}&lang=${lang}`),
+  generateTreatment: (patient_id: string, diagnosis: string, lang = 'uz') =>
+    post<TreatmentPlan>('/api/treatment/generate', { patient_id, diagnosis, lang }),
+  treatmentConsequence: (patient_id: string, original: PlanItem, changed: PlanItem, lang = 'uz') =>
+    post<{ consequence: string }>('/api/treatment/consequence', { patient_id, original, changed, lang }),
+  confirmTreatment: (patient_id: string, diagnosis: string, items: PlanItem[]) =>
+    post<{ ok: boolean; count: number; medications: Medication[] }>('/api/treatment/confirm', { patient_id, diagnosis, items }),
 }

@@ -11,6 +11,7 @@ import { timeAgo } from '../lib/format'
 const DATES = Array.from({ length: 5 }, (_, i) => {
   const d = new Date(); d.setDate(d.getDate() + i); return d.toISOString().slice(0, 10)
 })
+const KIND_ICON: Record<string, string> = { dori: '💊', ukol: '💉', osma: '💧', ingalyator: '🌬️' }
 
 export default function PatientHome() {
   const session = getSession()
@@ -111,18 +112,22 @@ export default function PatientHome() {
           </div>
         )}
 
-        {/* Dorilar */}
+        {/* Kunlik eslatmalar / dorilar */}
         <div className="card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold">💊 {t('ph.meds')}</h3>
+            <h3 className="font-bold">⏰ {t('pd.reminders')}</h3>
             <span className="text-xs text-slate-500 dark:text-slate-400">{takenCount}/{meds.length} {t('ph.taken')}</span>
           </div>
           <div className="space-y-2">
             {meds.map((m) => (
               <button key={m.id} onClick={() => toggleMed(m)}
-                className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${m.taken_today ? 'border-zone-green bg-green-50 dark:bg-green-950/30' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
-                <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${m.taken_today ? 'border-zone-green bg-zone-green text-white' : 'border-slate-300'}`}>{m.taken_today ? '✓' : ''}</span>
-                <span className="flex-1"><span className="block text-sm font-medium">{m.name} · {m.dose}</span><span className="block text-xs text-slate-500 dark:text-slate-400">{m.schedule}</span></span>
+                className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${m.taken_today ? 'border-zone-green bg-green-50 dark:bg-green-950/30' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${m.taken_today ? 'border-zone-green bg-zone-green text-white' : 'border-slate-300'}`}>{m.taken_today ? '✓' : ''}</span>
+                <span className="flex-1">
+                  <span className="block text-sm font-medium">{KIND_ICON[m.kind ?? 'dori']} {m.name} · {m.dose}</span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">{m.schedule}</span>
+                  {m.rationale && <span className="mt-1 block text-[11px] text-teal dark:text-teal-300">✦ {t('pd.whyThis')}: {m.rationale}</span>}
+                </span>
               </button>
             ))}
             {meds.length === 0 && <p className="text-sm text-slate-400">{t('ph.noMeds')}</p>}

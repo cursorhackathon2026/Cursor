@@ -62,7 +62,7 @@ export default function Dashboard() {
                   <tr className="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     <th className="px-4 py-3 font-semibold">{t('th.name')}</th>
                     <th className="px-4 py-3 font-semibold">{t('th.age')}</th>
-                    <th className="px-4 py-3 font-semibold">{t('th.week')}</th>
+                    <th className="px-4 py-3 font-semibold">{t('th.conditions')}</th>
                     <th className="px-4 py-3 font-semibold">{t('th.zone')}</th>
                     <th className="px-4 py-3 font-semibold">{t('th.reason')}</th>
                     <th className="px-4 py-3 font-semibold">{t('th.last')}</th>
@@ -73,8 +73,12 @@ export default function Dashboard() {
                   {!loading && shown.map((p) => (
                     <tr key={p.id} onClick={() => nav(`/patients/${p.id}`)} className="cursor-pointer border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                       <td className="px-4 py-3 font-medium">{p.name}</td>
-                      <td className="px-4 py-3 nums">{p.age}</td>
-                      <td className="px-4 py-3 nums">{p.gestational_week}</td>
+                      <td className="px-4 py-3 nums">{p.age}{p.gender ? ` ${t('g.' + p.gender)[0]}` : ''}</td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                        {p.conditions && p.conditions.length > 0
+                          ? td(p.conditions[0]) + (p.conditions.length > 1 ? ` +${p.conditions.length - 1}` : '')
+                          : (p.gestational_week ? `${p.gestational_week} ${t('pd.weekHomilalik')}` : '—')}
+                      </td>
                       <td className="px-4 py-3"><ZoneBadge zone={p.zone} /></td>
                       <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{p.reason[0] ? td(p.reason[0].label) : '—'}</td>
                       <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{timeAgo(p.updated_at)}</td>

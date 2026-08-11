@@ -15,7 +15,8 @@ class Patient(SQLModel, table=True):
     id: str = Field(primary_key=True)
     name: str
     age: int
-    gestational_week: int
+    gender: str = "F"                # F | M
+    gestational_week: int = 0        # 0 = homilador emas
     phone: str = Field(index=True)   # normalizatsiya qilingan
     region: str = "Navoiy viloyati"
     conditions: list = Field(default_factory=list, sa_column=Column(JSON))
@@ -41,6 +42,8 @@ class Medication(SQLModel, table=True):
     name: str
     dose: str
     schedule: str
+    kind: str = "dori"        # dori | ukol | osma | ingalyator
+    rationale: str = ""       # nega tayinlangan (izoh)
     taken_today: bool = False
 
 

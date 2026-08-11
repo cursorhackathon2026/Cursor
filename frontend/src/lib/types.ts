@@ -18,6 +18,9 @@ export interface Assessment {
 export interface Vitals {
   bp_sys?: number | null
   bp_dia?: number | null
+  pulse?: number | null
+  spo2?: number | null
+  temperature?: number | null
   hemoglobin?: number | null
   glucose?: number | null
   weight?: number | null
@@ -35,18 +38,53 @@ export interface PatientListItem {
   id: string
   name: string
   age: number
+  gender?: string
   gestational_week: number
   zone: Zone
+  conditions?: string[]
   reason: Factor[]
   updated_at: string
 }
+
+export type MedKind = 'dori' | 'ukol' | 'osma' | 'ingalyator'
 
 export interface Medication {
   id: string
   name: string
   dose: string
   schedule: string
+  kind?: MedKind
+  rationale?: string
   taken_today: boolean
+}
+
+export interface PlanItem {
+  kind: MedKind
+  name: string
+  dose: string
+  schedule: string
+  rationale: string
+  warn?: string
+}
+
+export interface TreatmentPlan {
+  summary: string
+  items: PlanItem[]
+  ai: boolean
+}
+
+export interface PrognosisItem {
+  cond: string
+  when: string
+  risk: string   // past | o'rta | yuqori
+  why: string
+  prevent: string
+}
+
+export interface Prognosis {
+  summary: string
+  items: PrognosisItem[]
+  ai: boolean
 }
 
 export interface HistoryItem {
@@ -106,6 +144,7 @@ export interface Patient {
   id: string
   name: string
   age: number
+  gender?: string
   gestational_week: number
   phone: string
   region: string

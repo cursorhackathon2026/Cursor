@@ -59,7 +59,7 @@ def seed():
         data = synthetic.seed()
         for p in data.values():
             s.add(Patient(
-                id=p["id"], name=p["name"], age=p["age"],
+                id=p["id"], name=p["name"], age=p["age"], gender=p.get("gender", "F"),
                 gestational_week=p["gestational_week"], phone=p["phone"],
                 region=p["region"], conditions=p["conditions"],
                 allergies=p["allergies"], history=p["history"],
@@ -71,6 +71,7 @@ def seed():
             for m in p["medications"]:
                 s.add(Medication(patient_id=p["id"], mid=m["id"], name=m["name"],
                                  dose=m["dose"], schedule=m["schedule"],
+                                 kind=m.get("kind", "dori"), rationale=m.get("rationale", ""),
                                  taken_today=m["taken_today"]))
             if p["current_zone"] == "Qizil":
                 s.add(_alert(_P(p), p["encounters"][-1]["assessment"]))

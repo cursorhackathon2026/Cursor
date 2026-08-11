@@ -15,22 +15,32 @@ function regionsFor(p: Patient, L: Record<string, string>): Region[] {
   const syms = new Set(last?.symptoms ?? [])
   const factors = (last?.assessment.factors ?? []).map((f) => f.label)
   const conds = p.conditions
+  const spo2 = last?.vitals?.spo2 ?? 100
+  const pregnant = !!p.gestational_week
   const hasF = (kw: string) => factors.some((x) => x.toLowerCase().includes(kw))
   const hasC = (kw: string) => conds.some((x) => x.toLowerCase().includes(kw))
 
-  const head: Sev = syms.has('bosh_ogrigi') ? 'red' : 'green'
+  const head: Sev = (syms.has('bosh_ogrigi') || hasF('kriz') || hasF('yuqori isitma')) ? 'red'
+    : (syms.has('bosh_aylanishi') || hasF('isitma')) ? 'amber' : 'green'
   const eyes: Sev = syms.has('koz_parcha') ? 'red' : 'green'
-  const heart: Sev = hasF("og'ir gipertenziya") ? 'red'
-    : (hasF('gipertenziya') || hasC('gipertenziya') || hasF('anemiya')) ? 'amber' : 'green'
-  const belly: Sev = (syms.has('harakat_kamaygan') || hasF('preeklampsiya')) ? 'red'
-    : (syms.has('qorin_ogrigi') || hasF('glyukoza') || hasF('diabet') || hasC('diabet')) ? 'amber' : 'green'
+  const heart: Sev = (syms.has('kokrak_ogrigi') || hasF('kriz') || hasF("og'ir gipertenziya")) ? 'red'
+    : (hasC('gipertenziya') || hasC('yurak') || hasF('gipertenziya') || hasF('taxikardiya')
+      || hasF('bradikardiya') || hasF('anemiya') || hasC('anemiya')) ? 'amber' : 'green'
+  const lungs: Sev = (hasF('kislorod tanqisligi') || (syms.has('nafas_qisilishi') && spo2 < 94)) ? 'red'
+    : (hasC('astma') || hasC("o'pka") || hasC('opka') || hasF('kislorod pasaygan') || syms.has('nafas_qisilishi')) ? 'amber' : 'green'
+  const belly: Sev = pregnant
+    ? ((syms.has('harakat_kamaygan') || hasF('preeklampsiya')) ? 'red' : (syms.has('qorin_ogrigi') ? 'amber' : 'green'))
+    : ((hasC('diabet') || hasF('qand') || hasC('gerd') || syms.has('qorin_ogrigi')) ? 'amber' : 'green')
+  const kidney: Sev = hasC('buyrak') ? 'amber' : 'green'
   const hands: Sev = syms.has('shish') ? 'amber' : 'green'
 
   return [
     { key: 'head', pos: [0, 1.78, 0.28], sev: head, label: L.head },
     { key: 'eyes', pos: [0, 1.68, 0.31], sev: eyes, label: L.eyes },
-    { key: 'heart', pos: [-0.08, 1.12, 0.34], sev: heart, label: L.heart },
-    { key: 'belly', pos: [0, 0.72, 0.36], sev: belly, label: L.belly },
+    { key: 'heart', pos: [-0.1, 1.15, 0.33], sev: heart, label: L.heart },
+    { key: 'lungs', pos: [0.14, 1.22, 0.31], sev: lungs, label: L.lungs },
+    { key: 'belly', pos: [0, 0.72, 0.36], sev: belly, label: pregnant ? L.belly : L.abdomen },
+    { key: 'kidney', pos: [-0.2, 0.62, 0.14], sev: kidney, label: L.kidney },
     { key: 'handL', pos: [-0.62, 0.62, 0.06], sev: hands, label: L.hands },
     { key: 'handR', pos: [0.62, 0.62, 0.06], sev: hands, label: L.hands },
   ]
@@ -86,7 +96,11 @@ function Body() {
 
 export function TwinBody({ patient }: { patient: Patient }) {
   const { t } = useT()
-  const L = { head: t('body.head'), eyes: t('body.eyes'), heart: t('body.heart'), belly: t('body.belly'), hands: t('body.hands') }
+  const L = {
+    head: t('body.head'), eyes: t('body.eyes'), heart: t('body.heart'),
+    lungs: t('body.lungs'), belly: t('body.belly'), abdomen: t('body.abdomen'),
+    kidney: t('body.kidney'), hands: t('body.hands'),
+  }
   const regions = regionsFor(patient, L)
   return (
     <div className="relative h-80 w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">

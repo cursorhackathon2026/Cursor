@@ -8,57 +8,57 @@ import { LangSwitcher } from '../components/LangSwitcher'
 
 const COPY: Record<string, any> = {
   uz: {
-    hero1: 'Ona va chaqaloq hayotini',
-    hero2: 'AI bilan asraymiz',
-    sub: 'Homilador ayollarni real vaqtda rang-zona bo‘yicha kuzatuvchi, xavfni oldindan ogohlantiruvchi va shifokorga raqamli egizak beruvchi platforma.',
+    hero1: 'Har bemorning kelajagini',
+    hero2: 'AI bilan bashorat qilamiz',
+    sub: 'Bemorlarni rang-zona bo‘yicha kuzatadigan, 5 yillik xavfni bashorat qiladigan va shifokorga izohli optimal davolash rejasi taklif qiladigan AI raqamli egizak platformasi.',
     start: 'Boshlash',
     more: 'Qanday ishlaydi?',
     featuresTitle: 'Nima taklif qilamiz',
     features: [
-      { icon: '🎯', title: 'Rang-zona xavf', desc: 'Qizil / Sariq / Yashil — tushuntirilgan sabab bilan', c: '#B42475' },
-      { icon: '🧬', title: 'Raqamli egizak', desc: 'Dori xavfsizligini bemor tarixiga qarab tekshirish', c: '#117E96' },
-      { icon: '🔔', title: 'Avto-ogohlantirish', desc: 'Xavf yomonlashsa — mutaxassisga darhol xabar', c: '#2563EB' },
-      { icon: '💊', title: 'Bemor portali', desc: 'Dori eslatmalari, qabul, AI tavsiyalar', c: '#7C3AED' },
+      { icon: '🧍', title: '3D Raqamli egizak', desc: 'Har bemorning ta’sirlangan a’zolari jonli 3D tanada', c: '#B42475' },
+      { icon: '🔮', title: 'AI 5-yillik prognoz', desc: 'Kelajakdagi asoratlarni oldindan bashorat qiladi', c: '#117E96' },
+      { icon: '✚', title: 'AI optimal davolash', desc: 'Dori/ukol/osma — izohi bilan, shifokor tasdiqlaydi', c: '#7C3AED' },
+      { icon: '🎯', title: 'Rang-zona xavf', desc: 'Qizil / Sariq / Yashil — tushuntirilgan sabab bilan', c: '#2563EB' },
     ],
-    stats: [['32M+', 'DMED bemor (mos)'], ['3', 'til: UZ/RU/EN'], ['4', 'rol'], ['Real-vaqt', 'AI monitoring']],
+    stats: [['3D', 'Raqamli egizak'], ['5 yil', 'AI prognoz'], ['AI', 'optimal davolash'], ['3', 'til: UZ/RU/EN']],
     howTitle: 'Bitta izchil zanjir',
-    steps: [['Kiritish', 'Hamshira ko‘rsatkichni kiritadi'], ['Baholash', 'AI zona + sababni aniqlaydi'], ['Ogohlantirish', 'Mutaxassisga avto-xabar'], ['Kuzatuv', 'Oilaviy shifokor davom ettiradi']],
+    steps: [['Kiritish', 'Hamshira ko‘rsatkichlarni kiritadi'], ['AI baholash', 'Zona + 5-yillik prognoz'], ['Optimal reja', 'AI taklif → shifokor tasdiqlaydi'], ['Kuzatuv', 'Bemorga eslatma va nazorat']],
     preview: 'Mahsulotni ko‘ring',
   },
   ru: {
-    hero1: 'Спасаем жизнь матери',
-    hero2: 'и ребёнка с ИИ',
-    sub: 'Платформа для мониторинга беременных по цветовым зонам в реальном времени, раннего оповещения и цифрового двойника для врача.',
+    hero1: 'Предсказываем будущее',
+    hero2: 'пациента с ИИ',
+    sub: 'ИИ-платформа цифрового двойника: наблюдает пациентов по цветовым зонам, прогнозирует риски на 5 лет и предлагает врачу оптимальный план лечения с пояснениями.',
     start: 'Начать',
     more: 'Как это работает?',
     featuresTitle: 'Что мы предлагаем',
     features: [
-      { icon: '🎯', title: 'Цветовые зоны риска', desc: 'Красный / Жёлтый / Зелёный — с объяснением', c: '#B42475' },
-      { icon: '🧬', title: 'Цифровой двойник', desc: 'Проверка безопасности препарата по истории', c: '#117E96' },
-      { icon: '🔔', title: 'Авто-оповещение', desc: 'При ухудшении — сразу специалисту', c: '#2563EB' },
-      { icon: '💊', title: 'Портал пациента', desc: 'Напоминания о лекарствах, запись, советы ИИ', c: '#7C3AED' },
+      { icon: '🧍', title: '3D цифровой двойник', desc: 'Затронутые органы пациента на живом 3D-теле', c: '#B42475' },
+      { icon: '🔮', title: 'ИИ-прогноз на 5 лет', desc: 'Заранее предсказывает будущие осложнения', c: '#117E96' },
+      { icon: '✚', title: 'ИИ оптимальное лечение', desc: 'Препараты/уколы/капельницы с пояснением, врач подтверждает', c: '#7C3AED' },
+      { icon: '🎯', title: 'Цветовые зоны риска', desc: 'Красный / Жёлтый / Зелёный — с объяснением', c: '#2563EB' },
     ],
-    stats: [['32M+', 'пациентов DMED'], ['3', 'языка: UZ/RU/EN'], ['4', 'роли'], ['Онлайн', 'ИИ-мониторинг']],
+    stats: [['3D', 'Цифровой двойник'], ['5 лет', 'ИИ-прогноз'], ['ИИ', 'оптим. лечение'], ['3', 'языка']],
     howTitle: 'Единая цепочка',
-    steps: [['Ввод', 'Медсестра вводит показатели'], ['Оценка', 'ИИ определяет зону и причину'], ['Оповещение', 'Авто-сигнал специалисту'], ['Наблюдение', 'Семейный врач продолжает']],
+    steps: [['Ввод', 'Медсестра вводит показатели'], ['ИИ-оценка', 'Зона + прогноз на 5 лет'], ['Опт. план', 'ИИ предлагает → врач подтверждает'], ['Наблюдение', 'Напоминания и контроль пациента']],
     preview: 'Посмотрите продукт',
   },
   en: {
-    hero1: 'Protecting mothers &',
-    hero2: 'newborns with AI',
-    sub: 'A platform that monitors pregnant women by real-time color zones, warns of risk early, and gives doctors a digital twin.',
+    hero1: 'We forecast each',
+    hero2: 'patient’s future with AI',
+    sub: 'An AI digital-twin platform that monitors patients by color zones, forecasts 5-year risks, and proposes the optimal treatment plan — with rationale — for the doctor.',
     start: 'Get started',
     more: 'How it works',
     featuresTitle: 'What we offer',
     features: [
-      { icon: '🎯', title: 'Color-zone risk', desc: 'Red / Yellow / Green — with explained cause', c: '#B42475' },
-      { icon: '🧬', title: 'Digital Twin', desc: 'Drug-safety check against patient history', c: '#117E96' },
-      { icon: '🔔', title: 'Auto-alerts', desc: 'Risk worsens → instant alert to specialist', c: '#2563EB' },
-      { icon: '💊', title: 'Patient portal', desc: 'Med reminders, booking, AI tips', c: '#7C3AED' },
+      { icon: '🧍', title: '3D Digital Twin', desc: 'Each patient’s affected organs on a live 3D body', c: '#B42475' },
+      { icon: '🔮', title: 'AI 5-year prognosis', desc: 'Forecasts future complications in advance', c: '#117E96' },
+      { icon: '✚', title: 'AI optimal treatment', desc: 'Drugs/injections/IV with rationale, doctor confirms', c: '#7C3AED' },
+      { icon: '🎯', title: 'Color-zone risk', desc: 'Red / Yellow / Green — with explained cause', c: '#2563EB' },
     ],
-    stats: [['32M+', 'DMED patients'], ['3', 'langs: UZ/RU/EN'], ['4', 'roles'], ['Real-time', 'AI monitoring']],
+    stats: [['3D', 'Digital Twin'], ['5-yr', 'AI prognosis'], ['AI', 'optimal care'], ['3', 'langs']],
     howTitle: 'One seamless chain',
-    steps: [['Capture', 'Nurse enters vitals'], ['Assess', 'AI finds zone & cause'], ['Alert', 'Auto-signal to specialist'], ['Follow-up', 'Family doctor continues']],
+    steps: [['Capture', 'Nurse enters vitals'], ['AI assess', 'Zone + 5-year prognosis'], ['Optimal plan', 'AI proposes → doctor confirms'], ['Follow-up', 'Patient reminders & monitoring']],
     preview: 'See the product',
   },
 }
@@ -98,8 +98,8 @@ export default function Login() {
       {/* NAV */}
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white font-extrabold shadow-lg shadow-brand/30">P</div>
-          <span className="font-display text-lg font-extrabold">Perinatal</span>
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white font-extrabold shadow-lg shadow-brand/30">S</div>
+          <span className="font-display text-lg font-extrabold">Salomat AI</span>
         </div>
         <div className="flex items-center gap-2">
           <LangSwitcher />
@@ -112,7 +112,7 @@ export default function Login() {
       <section className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-5 pt-8 pb-16 lg:grid-cols-2">
         <div className="animate-fadeup">
           <span className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/5 px-3 py-1 text-xs font-semibold text-brand">
-            ✦ AI · DMED ustida qatlam · Navoiy AI Xakaton 2026
+            ✦ AI Raqamli egizak · Navoiy AI Xakaton 2026
           </span>
           <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
             {L.hero1}<br /><span className="gradient-text">{L.hero2}</span>
@@ -145,7 +145,7 @@ export default function Login() {
 
           <form onSubmit={submit} className="card relative z-10 p-6 shadow-2xl shadow-brand/10">
             <div className="mb-4 text-center">
-              <h2 className="font-display text-xl font-extrabold">Perinatal Monitoring</h2>
+              <h2 className="font-display text-xl font-extrabold">Salomat AI</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t('app.tagline')}</p>
             </div>
             <label className="label">{t('login.phone')}</label>
@@ -203,11 +203,11 @@ export default function Login() {
           <div className="relative animate-floaty">
             <div className="card overflow-hidden p-0 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                <div className="flex items-center gap-2"><div className="grid h-6 w-6 place-items-center rounded-md bg-brand text-xs font-bold text-white">P</div><span className="text-sm font-bold">Bosh sahifa</span></div>
+                <div className="flex items-center gap-2"><div className="grid h-6 w-6 place-items-center rounded-md bg-brand text-xs font-bold text-white">S</div><span className="text-sm font-bold">Bosh sahifa</span></div>
                 <span className="text-[11px] text-slate-400">Navoiy · real-vaqt</span>
               </div>
               <div className="grid grid-cols-3 gap-2 p-4">
-                {[['16', 'Jami', 'text-slate-800 dark:text-slate-100'], ['4', 'Qizil', 'text-zone-red'], ['6', 'Sariq', 'text-zone-amber']].map((k, i) => (
+                {[['16', 'Jami', 'text-slate-800 dark:text-slate-100'], ['5', 'Qizil', 'text-zone-red'], ['6', 'Sariq', 'text-zone-amber']].map((k, i) => (
                   <div key={i} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                     <div className={`font-display text-xl font-extrabold ${k[2]}`}>{k[0]}</div>
                     <div className="text-[11px] text-slate-500">{k[1]}</div>
@@ -254,7 +254,7 @@ export default function Login() {
       {/* FOOTER */}
       <footer className="relative z-10 border-t border-slate-200 py-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
         <button onClick={() => scrollTo('login')} className="btn-primary mb-4">{L.start} →</button>
-        <p>Perinatal Monitoring · #MilliyAIXakaton · #NavoiyAI · 2026</p>
+        <p>Salomat AI · #MilliyAIXakaton · #NavoiyAI · 2026</p>
       </footer>
     </div>
   )

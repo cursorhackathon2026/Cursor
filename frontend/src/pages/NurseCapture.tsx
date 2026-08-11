@@ -6,8 +6,8 @@ import { ZoneBadge } from '../components/ZoneBadge'
 import { FactorBars } from '../components/FactorBars'
 import { useT } from '../lib/i18n'
 
-const SYMPTOM_KEYS = ['bosh_ogrigi', 'koz_parcha', 'kongil_aynishi', 'shish', 'qorin_ogrigi', 'harakat_kamaygan']
-const emptyForm = { bp_sys: '', bp_dia: '', weight: '', hemoglobin: '', glucose: '', gestational_week: '' }
+const SYMPTOM_KEYS = ['kokrak_ogrigi', 'nafas_qisilishi', 'bosh_ogrigi', 'bosh_aylanishi', 'shish', 'koz_parcha', 'kongil_aynishi', 'qorin_ogrigi', 'holsizlik', 'harakat_kamaygan']
+const emptyForm = { bp_sys: '', bp_dia: '', pulse: '', spo2: '', temperature: '', weight: '', hemoglobin: '', glucose: '', gestational_week: '' }
 
 export default function NurseCapture() {
   const { t, td, sym, lang } = useT()
@@ -47,7 +47,8 @@ export default function NurseCapture() {
     const payload = {
       patient_id: pid,
       vitals: {
-        bp_sys: num(form.bp_sys), bp_dia: num(form.bp_dia), weight: num(form.weight),
+        bp_sys: num(form.bp_sys), bp_dia: num(form.bp_dia), pulse: num(form.pulse),
+        spo2: num(form.spo2), temperature: num(form.temperature), weight: num(form.weight),
         hemoglobin: num(form.hemoglobin), glucose: num(form.glucose), gestational_week: num(form.gestational_week),
       },
       symptoms, use_llm: true, lang,
@@ -79,7 +80,7 @@ export default function NurseCapture() {
         <div className="card p-4">
           <label className="label">{t('nc.selectPatient')}</label>
           <select className="input" value={pid} onChange={(e) => setPid(e.target.value)}>
-            {patients.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.gestational_week}</option>)}
+            {patients.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.age}y</option>)}
           </select>
         </div>
 
@@ -94,6 +95,9 @@ export default function NurseCapture() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
+            <div><label className="label">{t('nc.pulse')}</label><input className="input" inputMode="numeric" value={form.pulse} onChange={(e) => setForm({ ...form, pulse: e.target.value })} /></div>
+            <div><label className="label">{t('nc.spo2')}</label><input className="input" inputMode="numeric" value={form.spo2} onChange={(e) => setForm({ ...form, spo2: e.target.value })} /></div>
+            <div><label className="label">{t('nc.temp')}</label><input className="input" inputMode="decimal" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} /></div>
             <div><label className="label">{t('nc.weight')}</label><input className="input" inputMode="decimal" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></div>
             <div><label className="label">{t('nc.hb')}</label><input className="input" inputMode="numeric" value={form.hemoglobin} onChange={(e) => setForm({ ...form, hemoglobin: e.target.value })} /></div>
             <div><label className="label">{t('nc.glu')}</label><input className="input" inputMode="decimal" value={form.glucose} onChange={(e) => setForm({ ...form, glucose: e.target.value })} /></div>
