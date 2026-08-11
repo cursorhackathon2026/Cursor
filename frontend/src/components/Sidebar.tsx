@@ -38,9 +38,9 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
       <div className="flex items-center gap-2 px-5 h-16 border-b border-slate-200 dark:border-slate-800">
-        <div className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white font-bold">S</div>
+        <div className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white font-bold">M</div>
         <div>
-          <p className="text-sm font-bold leading-tight">Salomat AI</p>
+          <p className="text-sm font-bold leading-tight">MedAI</p>
           <p className="text-[11px] text-slate-400 leading-tight">Raqamli egizak</p>
         </div>
       </div>

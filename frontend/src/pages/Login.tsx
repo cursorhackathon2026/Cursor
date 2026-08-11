@@ -8,8 +8,8 @@ import { LangSwitcher } from '../components/LangSwitcher'
 
 const COPY: Record<string, any> = {
   uz: {
-    hero1: 'Har bemorning kelajagini',
-    hero2: 'AI bilan bashorat qilamiz',
+    hero1: 'MedAI —',
+    hero2: 'bemor kelajagini bashorat qiladi',
     sub: 'Bemorlarni rang-zona bo‘yicha kuzatadigan, 5 yillik xavfni bashorat qiladigan va shifokorga izohli optimal davolash rejasi taklif qiladigan AI raqamli egizak platformasi.',
     start: 'Boshlash',
     more: 'Qanday ishlaydi?',
@@ -26,8 +26,8 @@ const COPY: Record<string, any> = {
     preview: 'Mahsulotni ko‘ring',
   },
   ru: {
-    hero1: 'Предсказываем будущее',
-    hero2: 'пациента с ИИ',
+    hero1: 'MedAI —',
+    hero2: 'прогнозирует будущее пациента',
     sub: 'ИИ-платформа цифрового двойника: наблюдает пациентов по цветовым зонам, прогнозирует риски на 5 лет и предлагает врачу оптимальный план лечения с пояснениями.',
     start: 'Начать',
     more: 'Как это работает?',
@@ -44,8 +44,8 @@ const COPY: Record<string, any> = {
     preview: 'Посмотрите продукт',
   },
   en: {
-    hero1: 'We forecast each',
-    hero2: 'patient’s future with AI',
+    hero1: 'MedAI —',
+    hero2: 'forecasts the patient’s future',
     sub: 'An AI digital-twin platform that monitors patients by color zones, forecasts 5-year risks, and proposes the optimal treatment plan — with rationale — for the doctor.',
     start: 'Get started',
     more: 'How it works',
@@ -98,8 +98,8 @@ export default function Login() {
       {/* NAV */}
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white font-extrabold shadow-lg shadow-brand/30">S</div>
-          <span className="font-display text-lg font-extrabold">Salomat AI</span>
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white font-extrabold shadow-lg shadow-brand/30">M</div>
+          <span className="font-display text-lg font-extrabold">MedAI</span>
         </div>
         <div className="flex items-center gap-2">
           <LangSwitcher />
@@ -112,7 +112,7 @@ export default function Login() {
       <section className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-5 pt-8 pb-16 lg:grid-cols-2">
         <div className="animate-fadeup">
           <span className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/5 px-3 py-1 text-xs font-semibold text-brand">
-            ✦ AI Raqamli egizak · Navoiy AI Xakaton 2026
+            ✦ MedAI · AI Raqamli egizak platformasi
           </span>
           <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
             {L.hero1}<br /><span className="gradient-text">{L.hero2}</span>
@@ -145,7 +145,7 @@ export default function Login() {
 
           <form onSubmit={submit} className="card relative z-10 p-6 shadow-2xl shadow-brand/10">
             <div className="mb-4 text-center">
-              <h2 className="font-display text-xl font-extrabold">Salomat AI</h2>
+              <h2 className="font-display text-xl font-extrabold">MedAI</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t('app.tagline')}</p>
             </div>
             <label className="label">{t('login.phone')}</label>
@@ -196,14 +196,13 @@ export default function Login() {
             <p className="mt-3 max-w-md text-slate-600 dark:text-slate-300">{L.sub}</p>
             <div className="mt-5 flex flex-wrap gap-2">
               {['UZ', 'RU', 'EN'].map((x) => <span key={x} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold dark:bg-slate-800">{x}</span>)}
-              <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">Web + APK</span>
             </div>
           </div>
           {/* mock dashboard card */}
           <div className="relative animate-floaty">
             <div className="card overflow-hidden p-0 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                <div className="flex items-center gap-2"><div className="grid h-6 w-6 place-items-center rounded-md bg-brand text-xs font-bold text-white">S</div><span className="text-sm font-bold">Bosh sahifa</span></div>
+                <div className="flex items-center gap-2"><div className="grid h-6 w-6 place-items-center rounded-md bg-brand text-xs font-bold text-white">M</div><span className="text-sm font-bold">Bosh sahifa</span></div>
                 <span className="text-[11px] text-slate-400">Navoiy · real-vaqt</span>
               </div>
               <div className="grid grid-cols-3 gap-2 p-4">
@@ -254,7 +253,7 @@ export default function Login() {
       {/* FOOTER */}
       <footer className="relative z-10 border-t border-slate-200 py-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
         <button onClick={() => scrollTo('login')} className="btn-primary mb-4">{L.start} →</button>
-        <p>Salomat AI · #MilliyAIXakaton · #NavoiyAI · 2026</p>
+        <p>MedAI · 2026</p>
       </footer>
     </div>
   )
