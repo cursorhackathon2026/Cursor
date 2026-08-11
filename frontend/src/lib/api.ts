@@ -1,6 +1,7 @@
 import type {
   Stats, PatientListItem, Patient, Alert, Assessment, Vitals, Zone,
   Medication, LifestyleRec, TwinResult, Appointment, LoginResult, Doctor, Slot,
+  Notif, ReportItem, Adherence,
 } from './types'
 
 const BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000'
@@ -67,4 +68,14 @@ export const api = {
     post<Appointment>(`/api/appointments/${id}/status`, { status }),
   createReport: (patient_id: string, note: string, symptoms: string[]) =>
     post<any>('/api/reports', { patient_id, note, symptoms }),
+
+  // FAZA 3: to'liq halqa
+  notifications: (audience: string) =>
+    j<{ items: Notif[]; unread: number }>(`/api/notifications?audience=${encodeURIComponent(audience)}`),
+  readNotifications: (audience: string) =>
+    post<{ ok: boolean }>('/api/notifications/read', { audience }),
+  reports: () => j<ReportItem[]>('/api/reports'),
+  replyReport: (id: string, reply: string) =>
+    post<{ ok: boolean }>(`/api/reports/${id}/reply`, { reply }),
+  adherence: () => j<Adherence[]>('/api/adherence'),
 }

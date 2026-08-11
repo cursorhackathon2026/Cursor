@@ -71,6 +71,32 @@ export interface Doctor {
   role: string
 }
 
+export interface Notif {
+  id: number
+  text: string
+  kind: string
+  created_at: string
+  read: boolean
+}
+
+export interface ReportItem {
+  id: string
+  patient_id: string
+  patient_name: string
+  note: string
+  symptoms: string[]
+  created_at: string
+  status: string
+}
+
+export interface Adherence {
+  id: string
+  name: string
+  zone: Zone
+  taken: number
+  total: number
+}
+
 export interface Slot {
   time: string
   is_booked: boolean

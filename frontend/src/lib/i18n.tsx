@@ -189,6 +189,19 @@ const D: Record<string, Tr> = {
   'sch.total': { uz: 'Jami qabullar', ru: 'Всего приёмов', en: 'Total appointments' },
   'sch.pending': { uz: 'Kutilmoqda', ru: 'В ожидании', en: 'Pending' },
 
+  // FAZA 3: Inbox + xabarlar
+  'nav.inbox': { uz: 'Inbox', ru: 'Входящие', en: 'Inbox' },
+  'inbox.title': { uz: 'Shifokor inbox', ru: 'Входящие врача', en: 'Doctor inbox' },
+  'inbox.reports': { uz: 'Ahvol xabarlari', ru: 'Сообщения о самочувствии', en: 'Condition reports' },
+  'inbox.adherence': { uz: 'Dori intizomi', ru: 'Приверженность лечению', en: 'Medication adherence' },
+  'inbox.notifs': { uz: 'Bildirishnomalar', ru: 'Уведомления', en: 'Notifications' },
+  'inbox.reply': { uz: 'Javob berish', ru: 'Ответить', en: 'Reply' },
+  'inbox.replyPh': { uz: 'Bemorga javob yozing…', ru: 'Напишите ответ пациенту…', en: 'Write a reply to the patient…' },
+  'inbox.noReports': { uz: 'Xabarlar yo‘q', ru: 'Нет сообщений', en: 'No reports' },
+  'inbox.noNotifs': { uz: 'Bildirishnoma yo‘q', ru: 'Нет уведомлений', en: 'No notifications' },
+  'ph.messages': { uz: 'Xabarlar', ru: 'Сообщения', en: 'Messages' },
+  'ph.noMessages': { uz: 'Xabar yo‘q', ru: 'Нет сообщений', en: 'No messages' },
+
   // errors
   'err.connect': { uz: 'Serverga ulanib bo‘lmadi', ru: 'Не удалось подключиться к серверу', en: 'Could not connect to server' },
 }
@@ -201,6 +214,8 @@ const DATA: Record<string, Tr> = {
   "so'ralgan": { uz: "so'ralgan", ru: 'запрошено', en: 'requested' },
   'tasdiqlangan': { uz: 'tasdiqlangan', ru: 'подтверждено', en: 'confirmed' },
   'bajarilgan': { uz: 'bajarilgan', ru: 'завершено', en: 'completed' },
+  'yangi': { uz: 'yangi', ru: 'новое', en: 'new' },
+  'javob berildi': { uz: 'javob berildi', ru: 'отвечено', en: 'replied' },
   // xavf omillari (risk_engine)
   "Og'ir gipertenziya": { uz: "Og'ir gipertenziya", ru: 'Тяжёлая гипертензия', en: 'Severe hypertension' },
   'Gipertenziya': { uz: 'Gipertenziya', ru: 'Гипертензия', en: 'Hypertension' },

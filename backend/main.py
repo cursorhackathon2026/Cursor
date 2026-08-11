@@ -393,3 +393,65 @@ def create_report(body: ReportIn):
         _notify(s, "mutaxassis", f"{p.name}: ahvol haqida xabar", "report")
         s.commit()
         return {"id": rep.id, "note": rep.note, "symptoms": rep.symptoms, "created_at": rep.created_at}
+
+
+# ================= FAZA 3: to'liq halqa =================
+@app.get("/api/notifications")
+def get_notifications(audience: str):
+    with get_session() as s:
+        n = s.exec(select(Notification).where(Notification.audience == audience).order_by(Notification.id.desc())).all()
+        return {"items": [{"id": x.id, "text": x.text, "kind": x.kind, "created_at": x.created_at, "read": x.read} for x in n],
+                "unread": sum(1 for x in n if not x.read)}
+
+
+class AudienceIn(BaseModel):
+    audience: str
+
+
+@app.post("/api/notifications/read")
+def read_notifications(body: AudienceIn):
+    with get_session() as s:
+        n = s.exec(select(Notification).where(Notification.audience == body.audience, Notification.read == False)).all()  # noqa: E712
+        for x in n:
+            x.read = True
+            s.add(x)
+        s.commit()
+        return {"ok": True, "marked": len(n)}
+
+
+@app.get("/api/reports")
+def list_reports():
+    with get_session() as s:
+        r = s.exec(select(Report).order_by(Report.created_at.desc())).all()
+        return [{"id": x.id, "patient_id": x.patient_id, "patient_name": x.patient_name,
+                 "note": x.note, "symptoms": x.symptoms, "created_at": x.created_at, "status": x.status} for x in r]
+
+
+class ReplyIn(BaseModel):
+    reply: str
+
+
+@app.post("/api/reports/{rid}/reply")
+def reply_report(rid: str, body: ReplyIn):
+    with get_session() as s:
+        r = s.get(Report, rid)
+        if not r:
+            raise HTTPException(404, "Xabar topilmadi")
+        r.status = "javob berildi"
+        s.add(r)
+        _notify(s, r.patient_id, f"Shifokor javobi: {body.reply}", "reply")
+        s.commit()
+        return {"ok": True}
+
+
+@app.get("/api/adherence")
+def adherence():
+    with get_session() as s:
+        out = []
+        for p in s.exec(select(Patient)).all():
+            meds = s.exec(select(Medication).where(Medication.patient_id == p.id)).all()
+            total = len(meds)
+            taken = sum(1 for m in meds if m.taken_today)
+            out.append({"id": p.id, "name": p.name, "zone": p.current_zone, "taken": taken, "total": total})
+        out.sort(key=lambda x: (x["total"] - x["taken"]), reverse=True)
+        return out

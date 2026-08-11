@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { getSession } from '../lib/store'
-import type { Patient, Medication, LifestyleRec, Appointment, Doctor, Slot } from '../lib/types'
+import type { Patient, Medication, LifestyleRec, Appointment, Doctor, Slot, Notif } from '../lib/types'
 import { TopBar } from '../components/TopBar'
 import { ZoneBadge } from '../components/ZoneBadge'
 import { useT } from '../lib/i18n'
+import { timeAgo } from '../lib/format'
 
 const DATES = Array.from({ length: 5 }, (_, i) => {
   const d = new Date(); d.setDate(d.getDate() + i); return d.toISOString().slice(0, 10)
@@ -29,6 +30,7 @@ export default function PatientHome() {
   const [apReason, setApReason] = useState('')
   const [reportNote, setReportNote] = useState('')
   const [reportSent, setReportSent] = useState(false)
+  const [notifs, setNotifs] = useState<Notif[]>([])
 
   useEffect(() => {
     if (!pid) return
@@ -36,6 +38,8 @@ export default function PatientHome() {
     api.medications(pid).then(setMeds)
     api.appointments(pid).then(setAppts)
     api.lifestyle(pid, lang).then((d) => setRecs(d.recommendations)).catch(() => {})
+    api.notifications(pid).then((d) => setNotifs(d.items)).catch(() => {})
+    api.readNotifications(pid).catch(() => {})
   }, [pid, lang])
 
   useEffect(() => { api.doctors().then((d) => { setDoctors(d); if (d[0]) setDocSel(d[0].name) }) }, [])
@@ -91,6 +95,21 @@ export default function PatientHome() {
             </div>
           )}
         </div>
+
+        {/* Xabarlar (shifokordan) */}
+        {notifs.length > 0 && (
+          <div className="card p-5">
+            <h3 className="mb-3 font-bold">🔔 {t('ph.messages')}</h3>
+            <div className="space-y-2">
+              {notifs.map((n) => (
+                <div key={n.id} className="flex items-center justify-between rounded-lg bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-sm">
+                  <span>{n.text}</span>
+                  <span className="text-[11px] text-slate-400 whitespace-nowrap">{timeAgo(n.created_at)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Dorilar */}
         <div className="card p-5">

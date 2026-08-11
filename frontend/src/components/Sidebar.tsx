@@ -1,16 +1,20 @@
+import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { getSession, clearSession, type Role } from '../lib/store'
 import { useT } from '../lib/i18n'
+import { api } from '../lib/api'
 
 const NAV: Record<Role, { to: string; key: string; icon: string }[]> = {
   mutaxassis: [
     { to: '/dashboard', key: 'nav.home', icon: '▦' },
     { to: '/schedule', key: 'nav.schedule', icon: '📅' },
+    { to: '/inbox', key: 'nav.inbox', icon: '📥' },
     { to: '/alerts', key: 'nav.alerts', icon: '🔔' },
   ],
   oilaviy: [
     { to: '/followup', key: 'nav.activeCall', icon: '📞' },
     { to: '/schedule', key: 'nav.schedule', icon: '📅' },
+    { to: '/inbox', key: 'nav.inbox', icon: '📥' },
     { to: '/alerts', key: 'nav.alerts', icon: '🔔' },
   ],
   hamshira: [{ to: '/capture', key: 'nav.addVisit', icon: '➕' }],
@@ -23,6 +27,14 @@ export function Sidebar() {
   const nav = useNavigate()
   const { t, role: roleT } = useT()
   const items = NAV[role] ?? []
+  const [unread, setUnread] = useState(0)
+
+  useEffect(() => {
+    if (role === 'mutaxassis' || role === 'oilaviy') {
+      api.notifications(role).then((d) => setUnread(d.unread)).catch(() => {})
+    }
+  }, [role])
+
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
       <div className="flex items-center gap-2 px-5 h-16 border-b border-slate-200 dark:border-slate-800">
@@ -44,7 +56,10 @@ export function Sidebar() {
             }
           >
             <span aria-hidden>{it.icon}</span>
-            {t(it.key)}
+            <span className="flex-1">{t(it.key)}</span>
+            {it.key === 'nav.inbox' && unread > 0 && (
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-bold text-white">{unread}</span>
+            )}
           </NavLink>
         ))}
       </nav>
