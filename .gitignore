@@ -3,6 +3,7 @@
 *.pyc
 backend/.venv/
 backend/.env
+backend/perinatal.db
 
 # Node
 frontend/node_modules/

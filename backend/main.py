@@ -1,9 +1,8 @@
 """
-Perinatal Monitoring + Digital Twin — Backend API (FastAPI).
+Perinatal Monitoring + Digital Twin — Backend API (FastAPI + SQLite).
 
 Ishga tushirish:
     ./.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
-Hujjatlar:  http://localhost:8000/docs
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +11,6 @@ from typing import Optional
 from datetime import datetime
 from pathlib import Path
 import os
-import re
 import uuid
 
 
@@ -28,53 +26,58 @@ def _load_env():
 
 _load_env()
 
+from sqlmodel import select
 import risk_engine
-import synthetic
 import llm
-
-app = FastAPI(title="Perinatal Monitoring + Digital Twin API")
-app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
+import seed as seed_mod
+from db import get_session, norm_phone
+from models import (
+    Staff, Patient, Encounter, Medication, Alert, Appointment, Report,
+    TwinCheck, LifestyleLog, Notification, DoctorSlot,
 )
 
-# --- In-memory "DB" (demo) ---
-PATIENTS = synthetic.seed()
-ALERTS = []
+seed_mod.seed()  # bazani yaratish + to'ldirish (bo'sh bo'lsa)
 
-# --- Xodimlar (telefon -> rol) ---
-STAFF = {
-    "901112233": {"role": "hamshira", "name": "Zulfiya Sobirova"},
-    "902223344": {"role": "mutaxassis", "name": "Dr. Aziz Nazarov"},
-    "903334455": {"role": "oilaviy", "name": "Dr. Nodira Tursunova"},
-}
+app = FastAPI(title="Perinatal Monitoring + Digital Twin API")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+_ORDER = {"Yashil": 0, "Sariq": 1, "Qizil": 2}
 
 
-def _norm_phone(p: str) -> str:
-    d = re.sub(r"\D", "", p or "")
-    return d[-9:] if len(d) >= 9 else d
-
-
-# Telefon -> patient_id indeksi
-PHONE_TO_PID = {_norm_phone(p["phone"]): pid for pid, p in PATIENTS.items()}
-
-
-def _make_alert(patient, assessment):
+# ---------- serializatsiya ----------
+def patient_dict(s, p: Patient) -> dict:
+    encs = s.exec(select(Encounter).where(Encounter.patient_id == p.id).order_by(Encounter.id)).all()
+    meds = s.exec(select(Medication).where(Medication.patient_id == p.id).order_by(Medication.id)).all()
+    appts = s.exec(select(Appointment).where(Appointment.patient_id == p.id)).all()
+    life = s.exec(select(LifestyleLog).where(LifestyleLog.patient_id == p.id).order_by(LifestyleLog.id.desc())).all()
     return {
-        "id": str(uuid.uuid4())[:8],
-        "patient_id": patient["id"],
-        "patient_name": patient["name"],
-        "zone": assessment["zone"],
-        "reason": assessment["factors"][0]["label"] if assessment["factors"] else "Xavf o'zgarishi",
-        "recommendation": assessment["recommendation"],
-        "created_at": datetime.now().isoformat(timespec="minutes"),
-        "status": "ochiq",
-        "urgent": assessment["urgent"],
+        "id": p.id, "name": p.name, "age": p.age, "gestational_week": p.gestational_week,
+        "phone": p.phone, "region": p.region, "conditions": p.conditions,
+        "allergies": p.allergies, "history": p.history, "current_zone": p.current_zone,
+        "updated_at": p.updated_at,
+        "encounters": [{"ts": e.ts, "vitals": e.vitals, "symptoms": e.symptoms, "assessment": e.assessment} for e in encs],
+        "medications": [{"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today} for m in meds],
+        "appointments": [{"id": a.id, "date": a.date, "time": a.time, "reason": a.reason, "status": a.status, "created_at": a.created_at} for a in appts],
+        "lifestyle_log": [{"title": l.title, "ts": l.ts} for l in life],
     }
 
 
-for p in PATIENTS.values():
-    if p["encounters"][-1]["assessment"]["zone"] == "Qizil":
-        ALERTS.append(_make_alert(p, p["encounters"][-1]["assessment"]))
+def alert_dict(a: Alert) -> dict:
+    return {"id": a.id, "patient_id": a.patient_id, "patient_name": a.patient_name,
+            "zone": a.zone, "reason": a.reason, "recommendation": a.recommendation,
+            "created_at": a.created_at, "status": a.status, "urgent": a.urgent}
+
+
+def _make_alert(p: Patient, a: dict) -> Alert:
+    return Alert(id=str(uuid.uuid4())[:8], patient_id=p.id, patient_name=p.name,
+                 zone=a["zone"], reason=a["factors"][0]["label"] if a["factors"] else "Xavf o'zgarishi",
+                 recommendation=a["recommendation"], created_at=datetime.now().isoformat(timespec="minutes"),
+                 status="ochiq", urgent=a["urgent"])
+
+
+def _notify(s, audience: str, text: str, kind: str):
+    s.add(Notification(audience=audience, text=text, kind=kind,
+                       created_at=datetime.now().isoformat(timespec="minutes")))
 
 
 # ================= AUTH =================
@@ -84,58 +87,62 @@ class LoginIn(BaseModel):
 
 @app.post("/api/login")
 def login(body: LoginIn):
-    ph = _norm_phone(body.phone)
-    if ph in STAFF:
-        s = STAFF[ph]
-        return {"role": s["role"], "name": s["name"], "patient_id": None}
-    if ph in PHONE_TO_PID:
-        pid = PHONE_TO_PID[ph]
-        return {"role": "bemor", "name": PATIENTS[pid]["name"], "patient_id": pid}
+    ph = norm_phone(body.phone)
+    with get_session() as s:
+        st = s.exec(select(Staff).where(Staff.phone == ph)).first()
+        if st:
+            return {"role": st.role, "name": st.name, "patient_id": None}
+        for p in s.exec(select(Patient)).all():
+            if norm_phone(p.phone) == ph:
+                return {"role": "bemor", "name": p.name, "patient_id": p.id}
     raise HTTPException(404, "Bu raqam ro'yxatda yo'q")
 
 
 @app.get("/api/demo-accounts")
 def demo_accounts():
-    """Demo uchun kirish raqamlari (login oynasida ko'rsatish uchun)."""
-    return {
-        "hamshira": "+998 90 111 22 33",
-        "mutaxassis": "+998 90 222 33 44",
-        "oilaviy": "+998 90 333 44 55",
-        "bemor": PATIENTS["P001"]["phone"] + " (Nasiba Karimova)",
-    }
+    with get_session() as s:
+        p1 = s.get(Patient, "P001")
+        return {"hamshira": "+998 90 111 22 33", "mutaxassis": "+998 90 222 33 44",
+                "oilaviy": "+998 90 333 44 55",
+                "bemor": (p1.phone if p1 else "") + " (Nasiba Karimova)"}
 
 
-# ================= DASHBOARD / MONITORING (#9) =================
+# ================= MONITORING (#9) =================
 @app.get("/api/stats")
 def stats():
-    zones = [p["current_zone"] for p in PATIENTS.values()]
-    return {"total": len(PATIENTS), "qizil": zones.count("Qizil"),
-            "sariq": zones.count("Sariq"), "yashil": zones.count("Yashil"),
-            "open_alerts": sum(1 for a in ALERTS if a["status"] == "ochiq"),
-            "region": "Navoiy viloyati"}
+    with get_session() as s:
+        pats = s.exec(select(Patient)).all()
+        zones = [p.current_zone for p in pats]
+        return {"total": len(pats), "qizil": zones.count("Qizil"),
+                "sariq": zones.count("Sariq"), "yashil": zones.count("Yashil"),
+                "open_alerts": len(s.exec(select(Alert).where(Alert.status == "ochiq")).all()),
+                "region": "Navoiy viloyati"}
 
 
 @app.get("/api/patients")
 def list_patients(zone: Optional[str] = None):
-    items = []
-    for p in PATIENTS.values():
-        if zone and p["current_zone"] != zone:
-            continue
-        items.append({"id": p["id"], "name": p["name"], "age": p["age"],
-                      "gestational_week": p["gestational_week"], "zone": p["current_zone"],
-                      "reason": p["encounters"][-1]["assessment"]["factors"][:1],
-                      "updated_at": p["updated_at"]})
-    order = {"Qizil": 0, "Sariq": 1, "Yashil": 2}
-    items.sort(key=lambda x: (order.get(x["zone"], 9), x["updated_at"]))
-    return items
+    with get_session() as s:
+        pats = s.exec(select(Patient)).all()
+        items = []
+        for p in pats:
+            if zone and p.current_zone != zone:
+                continue
+            last = s.exec(select(Encounter).where(Encounter.patient_id == p.id).order_by(Encounter.id.desc())).first()
+            reason = last.assessment.get("factors", [])[:1] if last else []
+            items.append({"id": p.id, "name": p.name, "age": p.age,
+                          "gestational_week": p.gestational_week, "zone": p.current_zone,
+                          "reason": reason, "updated_at": p.updated_at})
+        items.sort(key=lambda x: (_ORDER.get(x["zone"], 9), x["updated_at"]), reverse=True)
+        return items
 
 
 @app.get("/api/patients/{pid}")
 def get_patient(pid: str):
-    p = PATIENTS.get(pid)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    return p
+    with get_session() as s:
+        p = s.get(Patient, pid)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        return patient_dict(s, p)
 
 
 class Vitals(BaseModel):
@@ -157,40 +164,49 @@ class EncounterIn(BaseModel):
 
 @app.post("/api/encounters")
 def add_encounter(e: EncounterIn):
-    p = PATIENTS.get(e.patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    v = e.vitals.model_dump()
-    a = risk_engine.assess(v, e.symptoms).to_dict()
-    if e.use_llm:
-        a["recommendation"] = llm.enrich_recommendation(a["zone"], a["factors"], a["recommendation"], e.lang)
-    enc = {"ts": datetime.now().isoformat(timespec="minutes"),
-           "vitals": v, "symptoms": e.symptoms, "assessment": a}
-    p["encounters"].append(enc)
-    prev = p["current_zone"]
-    p["current_zone"] = a["zone"]
-    p["updated_at"] = enc["ts"]
-    order = {"Yashil": 0, "Sariq": 1, "Qizil": 2}
-    alert = None
-    if a["zone"] == "Qizil" or order[a["zone"]] > order[prev]:
-        alert = _make_alert(p, a)
-        ALERTS.insert(0, alert)
-    return {"assessment": a, "previous_zone": prev,
-            "zone_changed": prev != a["zone"], "alert": alert}
+    with get_session() as s:
+        p = s.get(Patient, e.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        v = e.vitals.model_dump()
+        a = risk_engine.assess(v, e.symptoms).to_dict()
+        if e.use_llm:
+            a["recommendation"] = llm.enrich_recommendation(a["zone"], a["factors"], a["recommendation"], e.lang)
+        now = datetime.now().isoformat(timespec="minutes")
+        s.add(Encounter(patient_id=p.id, ts=now, vitals=v, symptoms=e.symptoms, assessment=a))
+        prev = p.current_zone
+        p.current_zone = a["zone"]
+        p.updated_at = now
+        s.add(p)
+        alert = None
+        if a["zone"] == "Qizil" or _ORDER[a["zone"]] > _ORDER[prev]:
+            al = _make_alert(p, a)
+            s.add(al)
+            _notify(s, "mutaxassis", f"{p.name}: {al.reason} ({a['zone']})", "alert")
+            alert = alert_dict(al)
+        s.commit()
+        return {"assessment": a, "previous_zone": prev,
+                "zone_changed": prev != a["zone"], "alert": alert}
 
 
 @app.get("/api/alerts")
 def list_alerts(status: Optional[str] = None):
-    return [a for a in ALERTS if not status or a["status"] == status]
+    with get_session() as s:
+        q = select(Alert).order_by(Alert.created_at.desc())
+        alerts = s.exec(q).all()
+        return [alert_dict(a) for a in alerts if not status or a.status == status]
 
 
 @app.post("/api/alerts/{aid}/ack")
 def ack_alert(aid: str):
-    for a in ALERTS:
-        if a["id"] == aid:
-            a["status"] = "ko'rildi"
-            return a
-    raise HTTPException(404, "Ogohlantirish topilmadi")
+    with get_session() as s:
+        a = s.get(Alert, aid)
+        if not a:
+            raise HTTPException(404, "Ogohlantirish topilmadi")
+        a.status = "ko'rildi"
+        s.add(a)
+        s.commit()
+        return alert_dict(a)
 
 
 # ================= DIGITAL TWIN (#12) =================
@@ -203,24 +219,28 @@ class TwinIn(BaseModel):
 
 @app.post("/api/twin/evaluate")
 def twin_evaluate(body: TwinIn):
-    """Shifokor taklif qilgan dorini bemor egizagida baholash."""
-    p = PATIENTS.get(body.patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    res = llm.twin_evaluate(p, body.drug, body.dose, body.lang)
-    res["drug"] = body.drug
-    res["dose"] = body.dose
-    res["evaluated_at"] = datetime.now().isoformat(timespec="minutes")
-    p.setdefault("twin_checks", []).insert(0, res)
-    return res
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        res = llm.twin_evaluate(patient_dict(s, p), body.drug, body.dose, body.lang)
+        res["drug"], res["dose"] = body.drug, body.dose
+        now = datetime.now().isoformat(timespec="minutes")
+        res["evaluated_at"] = now
+        s.add(TwinCheck(patient_id=p.id, drug=body.drug, dose=body.dose,
+                        level=res["level"], summary=res["summary"],
+                        warnings=res["warnings"], created_at=now))
+        s.commit()
+        return res
 
 
 @app.get("/api/twin/lifestyle")
 def twin_lifestyle(patient_id: str, lang: str = "uz"):
-    p = PATIENTS.get(patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    return {"recommendations": llm.lifestyle_recommend(p, lang)}
+    with get_session() as s:
+        p = s.get(Patient, patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        return {"recommendations": llm.lifestyle_recommend(patient_dict(s, p), lang)}
 
 
 class LifestyleAccept(BaseModel):
@@ -230,22 +250,23 @@ class LifestyleAccept(BaseModel):
 
 @app.post("/api/twin/lifestyle/accept")
 def lifestyle_accept(body: LifestyleAccept):
-    """Bemor "Sinab ko'raman" bosadi -> tarixga (va shifokorga) yoziladi."""
-    p = PATIENTS.get(body.patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    entry = {"title": body.title, "ts": datetime.now().isoformat(timespec="minutes")}
-    p["lifestyle_log"].insert(0, entry)
-    return {"ok": True, "logged": entry}
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        now = datetime.now().isoformat(timespec="minutes")
+        s.add(LifestyleLog(patient_id=p.id, title=body.title, ts=now))
+        _notify(s, "mutaxassis", f"{p.name}: '{body.title}' tavsiyasini bajarmoqchi", "lifestyle")
+        s.commit()
+        return {"ok": True, "logged": {"title": body.title, "ts": now}}
 
 
 # ================= BEMOR PORTALI =================
 @app.get("/api/medications")
 def get_medications(patient_id: str):
-    p = PATIENTS.get(patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    return p["medications"]
+    with get_session() as s:
+        meds = s.exec(select(Medication).where(Medication.patient_id == patient_id).order_by(Medication.id)).all()
+        return [{"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today} for m in meds]
 
 
 class MedToggle(BaseModel):
@@ -256,14 +277,14 @@ class MedToggle(BaseModel):
 
 @app.post("/api/medications/toggle")
 def toggle_medication(body: MedToggle):
-    p = PATIENTS.get(body.patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    for m in p["medications"]:
-        if m["id"] == body.med_id:
-            m["taken_today"] = body.taken
-            return m
-    raise HTTPException(404, "Dori topilmadi")
+    with get_session() as s:
+        m = s.exec(select(Medication).where(Medication.patient_id == body.patient_id, Medication.mid == body.med_id)).first()
+        if not m:
+            raise HTTPException(404, "Dori topilmadi")
+        m.taken_today = body.taken
+        s.add(m)
+        s.commit()
+        return {"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today}
 
 
 class AppointmentIn(BaseModel):
@@ -274,21 +295,24 @@ class AppointmentIn(BaseModel):
 
 @app.get("/api/appointments")
 def get_appointments(patient_id: str):
-    p = PATIENTS.get(patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    return p["appointments"]
+    with get_session() as s:
+        appts = s.exec(select(Appointment).where(Appointment.patient_id == patient_id).order_by(Appointment.created_at.desc())).all()
+        return [{"id": a.id, "date": a.date, "time": a.time, "reason": a.reason, "status": a.status, "created_at": a.created_at} for a in appts]
 
 
 @app.post("/api/appointments")
 def create_appointment(body: AppointmentIn):
-    p = PATIENTS.get(body.patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    ap = {"id": str(uuid.uuid4())[:8], "date": body.date, "reason": body.reason,
-          "status": "so'ralgan", "created_at": datetime.now().isoformat(timespec="minutes")}
-    p["appointments"].insert(0, ap)
-    return ap
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        ap = Appointment(id=str(uuid.uuid4())[:8], patient_id=p.id, patient_name=p.name,
+                         date=body.date, reason=body.reason, status="so'ralgan",
+                         created_at=datetime.now().isoformat(timespec="minutes"))
+        s.add(ap)
+        _notify(s, "mutaxassis", f"{p.name}: qabulga yozildi ({body.date})", "appointment")
+        s.commit()
+        return {"id": ap.id, "date": ap.date, "time": ap.time, "reason": ap.reason, "status": ap.status, "created_at": ap.created_at}
 
 
 class ReportIn(BaseModel):
@@ -299,10 +323,14 @@ class ReportIn(BaseModel):
 
 @app.post("/api/reports")
 def create_report(body: ReportIn):
-    p = PATIENTS.get(body.patient_id)
-    if not p:
-        raise HTTPException(404, "Bemor topilmadi")
-    rep = {"id": str(uuid.uuid4())[:8], "note": body.note, "symptoms": body.symptoms,
-           "created_at": datetime.now().isoformat(timespec="minutes")}
-    p["reports"].insert(0, rep)
-    return rep
+    with get_session() as s:
+        p = s.get(Patient, body.patient_id)
+        if not p:
+            raise HTTPException(404, "Bemor topilmadi")
+        rep = Report(id=str(uuid.uuid4())[:8], patient_id=p.id, patient_name=p.name,
+                     note=body.note, symptoms=body.symptoms, status="yangi",
+                     created_at=datetime.now().isoformat(timespec="minutes"))
+        s.add(rep)
+        _notify(s, "mutaxassis", f"{p.name}: ahvol haqida xabar", "report")
+        s.commit()
+        return {"id": rep.id, "note": rep.note, "symptoms": rep.symptoms, "created_at": rep.created_at}
