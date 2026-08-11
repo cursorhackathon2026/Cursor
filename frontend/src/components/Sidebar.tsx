@@ -1,23 +1,25 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { getSession, clearSession, ROLE_LABEL, type Role } from '../lib/store'
+import { getSession, clearSession, type Role } from '../lib/store'
+import { useT } from '../lib/i18n'
 
-const NAV: Record<Role, { to: string; label: string; icon: string }[]> = {
+const NAV: Record<Role, { to: string; key: string; icon: string }[]> = {
   mutaxassis: [
-    { to: '/dashboard', label: 'Bosh sahifa', icon: '▦' },
-    { to: '/alerts', label: 'Ogohlantirishlar', icon: '🔔' },
+    { to: '/dashboard', key: 'nav.home', icon: '▦' },
+    { to: '/alerts', key: 'nav.alerts', icon: '🔔' },
   ],
   oilaviy: [
-    { to: '/followup', label: 'Aktiv chaqiruv', icon: '📞' },
-    { to: '/alerts', label: 'Ogohlantirishlar', icon: '🔔' },
+    { to: '/followup', key: 'nav.activeCall', icon: '📞' },
+    { to: '/alerts', key: 'nav.alerts', icon: '🔔' },
   ],
-  hamshira: [{ to: '/capture', label: 'Ko‘rik qo‘shish', icon: '➕' }],
-  bemor: [{ to: '/patient', label: 'Mening sahifam', icon: '🏠' }],
+  hamshira: [{ to: '/capture', key: 'nav.addVisit', icon: '➕' }],
+  bemor: [{ to: '/patient', key: 'nav.myPage', icon: '🏠' }],
 }
 
 export function Sidebar() {
   const session = getSession()
   const role = (session?.role ?? 'mutaxassis') as Role
   const nav = useNavigate()
+  const { t, role: roleT } = useT()
   const items = NAV[role] ?? []
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -35,25 +37,20 @@ export function Sidebar() {
             to={it.to}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-brand/10 text-brand'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                isActive ? 'bg-brand/10 text-brand' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`
             }
           >
             <span aria-hidden>{it.icon}</span>
-            {it.label}
+            {t(it.key)}
           </NavLink>
         ))}
       </nav>
       <div className="border-t border-slate-200 dark:border-slate-800 p-3">
         <p className="px-2 text-xs font-medium truncate">{session?.name}</p>
-        <p className="px-2 text-[11px] text-slate-400">{ROLE_LABEL[role]}</p>
-        <button
-          onClick={() => { clearSession(); nav('/') }}
-          className="mt-1 w-full btn-ghost !justify-start !py-2 text-sm"
-        >
-          ⏻ Chiqish
+        <p className="px-2 text-[11px] text-slate-400">{roleT(role)}</p>
+        <button onClick={() => { clearSession(); nav('/') }} className="mt-1 w-full btn-ghost !justify-start !py-2 text-sm">
+          ⏻ {t('c.logout')}
         </button>
       </div>
     </aside>

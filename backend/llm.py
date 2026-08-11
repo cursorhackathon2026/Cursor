@@ -19,6 +19,17 @@ except Exception:
     _SSL_CTX = ssl.create_default_context()
 
 
+_LANG = {
+    "uz": "MUHIM: butun javobni FAQAT o'zbek tilida yoz.",
+    "ru": "ВАЖНО: пиши весь ответ ТОЛЬКО на русском языке, кириллицей.",
+    "en": "IMPORTANT: write the ENTIRE response ONLY in English.",
+}
+
+
+def _ld(lang):
+    return _LANG.get(lang, _LANG["uz"])
+
+
 def _call(messages, max_tokens=200, temperature=0.3):
     """LLM chaqiruvi. Matn yoki None (kalit yo'q / xato)."""
     key = os.environ.get("OPENAI_API_KEY")
@@ -64,17 +75,17 @@ def _extract_json(text):
 # ---------- #9: xavf tavsiyasini boyitish ----------
 _SYSTEM_REC = (
     "Siz perinatal monitoring uchun shifokorga QAROR QO'LLAB-QUVVATLASH "
-    "yordamchisisiz. O'zbek tilida, 1-2 jumlada, faqat KUZATUV va TRIAJ tavsiyasini bering. "
+    "yordamchisisiz. 1-2 jumlada, faqat KUZATUV va TRIAJ tavsiyasini bering. "
     "HECH QACHON aniq dori nomi yoki dozasini aytmang. Yakuniy qaror shifokorda."
 )
 
 
-def enrich_recommendation(zone, factors, fallback):
+def enrich_recommendation(zone, factors, fallback, lang="uz"):
     factor_lines = "\n".join(f"- {f['label']}: {f['detail']}" for f in factors) or "- Omil yo'q"
     user = (f"Bemor xavf zonasi: {zone}.\nOmillar:\n{factor_lines}\n\n"
             "Shifokor uchun qisqa kuzatuv/triaj tavsiyasi (dori/doza yo'q).")
-    out = _call([{"role": "system", "content": _SYSTEM_REC},
-                 {"role": "user", "content": user}], max_tokens=160)
+    out = _call([{"role": "system", "content": _ld(lang) + " " + _SYSTEM_REC},
+                 {"role": "user", "content": user + "\n\n" + _ld(lang)}], max_tokens=180)
     return out or fallback
 
 
@@ -87,11 +98,11 @@ _SYSTEM_TWIN = (
     "Siz DORI BELGILAMAYSIZ — shifokor qaroriga yordam berasiz. "
     "Faqat JSON qaytaring: "
     '{"level":"Xavfsiz|Ehtiyot|Xavfli","warnings":["qisqa ogohlantirish"],"summary":"1-2 jumla xulosa"}. '
-    "O'zbek tilida."
+    "MUHIM: 'level' qiymati DOIM aynan Xavfsiz/Ehtiyot/Xavfli bo'lsin; warnings va summary matnlari so'ralgan tilда bo'lsin."
 )
 
 
-def twin_evaluate(patient, drug, dose):
+def twin_evaluate(patient, drug, dose, lang="uz"):
     """Qoida (allergiya) + LLM. Qaytadi: {level, warnings, summary}."""
     conditions = ", ".join(patient.get("conditions", [])) or "yo'q"
     allergies = patient.get("allergies", [])
@@ -99,11 +110,16 @@ def twin_evaluate(patient, drug, dose):
     last = patient["encounters"][-1]["vitals"] if patient["encounters"] else {}
     vit = f"BP {last.get('bp_sys')}/{last.get('bp_dia')}, Hb {last.get('hemoglobin')}, Glu {last.get('glucose')}, {last.get('gestational_week')}-hafta homilalik"
 
+    _AW = {
+        "uz": "Bemorда {a} allergiyasi bor — bu dori mos kelmasligi mumkin!",
+        "ru": "У пациента аллергия на {a} — препарат может быть противопоказан!",
+        "en": "Patient is allergic to {a} — this drug may be contraindicated!",
+    }
     # Kafolatlangan qoida: allergiya mosligi -> Xavfli
     rule_warnings = []
     for a in allergies:
         if a and (a.lower() in drug.lower() or drug.lower() in a.lower()):
-            rule_warnings.append(f"Bemorда {a} allergiyasi bor — bu dori mos kelishi mumkin!")
+            rule_warnings.append(_AW.get(lang, _AW["uz"]).format(a=a))
 
     user = (f"Bemor: {patient['name']}, {patient['age']} yosh.\n"
             f"Surunkali kasalliklar: {conditions}\n"
@@ -111,8 +127,8 @@ def twin_evaluate(patient, drug, dose):
             f"Joriy ko'rsatkichlar: {vit}\n"
             f"Shifokor taklif qilgan dori: {drug} {dose}\n\n"
             "Ushbu dorini baholang (JSON).")
-    parsed = _extract_json(_call([{"role": "system", "content": _SYSTEM_TWIN},
-                                  {"role": "user", "content": user}],
+    parsed = _extract_json(_call([{"role": "system", "content": _ld(lang) + " " + _SYSTEM_TWIN},
+                                  {"role": "user", "content": user + "\n\n" + _ld(lang)}],
                                  max_tokens=320, temperature=0.2))
 
     if parsed and isinstance(parsed, dict):
@@ -139,18 +155,18 @@ _SYSTEM_LIFE = (
     "Siz bemor uchun sog'lom turmush-tarzi maslahatchisisiz. Bemorning ko'rsatkichlari "
     "va kasalliklariga qarab 3 ta AMALIY, XAVFSIZ tavsiya bering (stress, ovqatlanish, "
     "harakat, uyqu). Dori tavsiya QILMANG. Faqat JSON: "
-    '[{"title":"qisqa sarlavha","detail":"1 jumla amaliy maslahat"}]. O\'zbek tilida.'
+    '[{"title":"qisqa sarlavha","detail":"1 jumla amaliy maslahat"}].'
 )
 
 
-def lifestyle_recommend(patient):
+def lifestyle_recommend(patient, lang="uz"):
     conditions = ", ".join(patient.get("conditions", [])) or "yo'q"
     last = patient["encounters"][-1]["vitals"] if patient["encounters"] else {}
     user = (f"Ko'rsatkichlar: BP {last.get('bp_sys')}/{last.get('bp_dia')}, "
             f"Hb {last.get('hemoglobin')}, Glu {last.get('glucose')}. "
             f"Kasalliklar: {conditions}. 3 ta turmush-tarzi tavsiyasi (JSON).")
-    parsed = _extract_json(_call([{"role": "system", "content": _SYSTEM_LIFE},
-                                  {"role": "user", "content": user}],
+    parsed = _extract_json(_call([{"role": "system", "content": _ld(lang) + " " + _SYSTEM_LIFE},
+                                  {"role": "user", "content": user + "\n\n" + _ld(lang)}],
                                  max_tokens=320, temperature=0.5))
     if isinstance(parsed, list) and parsed:
         return [{"title": x.get("title", ""), "detail": x.get("detail", "")}

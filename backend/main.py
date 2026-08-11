@@ -152,6 +152,7 @@ class EncounterIn(BaseModel):
     vitals: Vitals
     symptoms: list[str] = []
     use_llm: bool = True
+    lang: str = "uz"
 
 
 @app.post("/api/encounters")
@@ -162,7 +163,7 @@ def add_encounter(e: EncounterIn):
     v = e.vitals.model_dump()
     a = risk_engine.assess(v, e.symptoms).to_dict()
     if e.use_llm:
-        a["recommendation"] = llm.enrich_recommendation(a["zone"], a["factors"], a["recommendation"])
+        a["recommendation"] = llm.enrich_recommendation(a["zone"], a["factors"], a["recommendation"], e.lang)
     enc = {"ts": datetime.now().isoformat(timespec="minutes"),
            "vitals": v, "symptoms": e.symptoms, "assessment": a}
     p["encounters"].append(enc)
@@ -197,6 +198,7 @@ class TwinIn(BaseModel):
     patient_id: str
     drug: str
     dose: str = ""
+    lang: str = "uz"
 
 
 @app.post("/api/twin/evaluate")
@@ -205,7 +207,7 @@ def twin_evaluate(body: TwinIn):
     p = PATIENTS.get(body.patient_id)
     if not p:
         raise HTTPException(404, "Bemor topilmadi")
-    res = llm.twin_evaluate(p, body.drug, body.dose)
+    res = llm.twin_evaluate(p, body.drug, body.dose, body.lang)
     res["drug"] = body.drug
     res["dose"] = body.dose
     res["evaluated_at"] = datetime.now().isoformat(timespec="minutes")
@@ -214,11 +216,11 @@ def twin_evaluate(body: TwinIn):
 
 
 @app.get("/api/twin/lifestyle")
-def twin_lifestyle(patient_id: str):
+def twin_lifestyle(patient_id: str, lang: str = "uz"):
     p = PATIENTS.get(patient_id)
     if not p:
         raise HTTPException(404, "Bemor topilmadi")
-    return {"recommendations": llm.lifestyle_recommend(p)}
+    return {"recommendations": llm.lifestyle_recommend(p, lang)}
 
 
 class LifestyleAccept(BaseModel):

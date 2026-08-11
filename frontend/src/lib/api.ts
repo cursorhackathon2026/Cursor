@@ -35,17 +35,17 @@ export const api = {
   patients: (zone?: string) =>
     j<PatientListItem[]>('/api/patients' + (zone ? `?zone=${encodeURIComponent(zone)}` : '')),
   patient: (id: string) => j<Patient>(`/api/patients/${id}`),
-  addEncounter: (body: { patient_id: string; vitals: Vitals; symptoms: string[]; use_llm?: boolean }) =>
+  addEncounter: (body: { patient_id: string; vitals: Vitals; symptoms: string[]; use_llm?: boolean; lang?: string }) =>
     post<EncounterResult>('/api/encounters', body),
   alerts: (status?: string) =>
     j<Alert[]>('/api/alerts' + (status ? `?status=${encodeURIComponent(status)}` : '')),
   ackAlert: (id: string) => post<Alert>(`/api/alerts/${id}/ack`, {}),
 
   // digital twin (#12)
-  twinEvaluate: (patient_id: string, drug: string, dose: string) =>
-    post<TwinResult>('/api/twin/evaluate', { patient_id, drug, dose }),
-  lifestyle: (patient_id: string) =>
-    j<{ recommendations: LifestyleRec[] }>(`/api/twin/lifestyle?patient_id=${patient_id}`),
+  twinEvaluate: (patient_id: string, drug: string, dose: string, lang = 'uz') =>
+    post<TwinResult>('/api/twin/evaluate', { patient_id, drug, dose, lang }),
+  lifestyle: (patient_id: string, lang = 'uz') =>
+    j<{ recommendations: LifestyleRec[] }>(`/api/twin/lifestyle?patient_id=${patient_id}&lang=${lang}`),
   lifestyleAccept: (patient_id: string, title: string) =>
     post<{ ok: boolean }>('/api/twin/lifestyle/accept', { patient_id, title }),
 

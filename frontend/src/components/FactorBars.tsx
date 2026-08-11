@@ -1,13 +1,11 @@
 import type { Factor } from '../lib/types'
+import { useT } from '../lib/i18n'
 
-/** Xavf omillarining tushuntirilishi — "nega bu zona". Status ranglar + yorliq. */
+/** Xavf omillarining tushuntirilishi — status ranglar + yorliq. */
 export function FactorBars({ factors }: { factors: Factor[] }) {
+  const { t } = useT()
   if (!factors.length)
-    return (
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        Xavf omili aniqlanmadi — ko‘rsatkichlar me’yorda.
-      </p>
-    )
+    return <p className="text-sm text-slate-500 dark:text-slate-400">{t('pd.factorNone')}</p>
   const max = Math.max(60, ...factors.map((f) => f.points))
   return (
     <ul className="space-y-3">
@@ -24,10 +22,7 @@ export function FactorBars({ factors }: { factors: Factor[] }) {
               <span className="text-xs text-slate-500 dark:text-slate-400 nums">{f.detail}</span>
             </div>
             <div className="mt-1.5 h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
-              <div
-                className={`h-2 rounded-full ${color}`}
-                style={{ width: `${pct}%` }}
-              />
+              <div className={`h-2 rounded-full ${color}`} style={{ width: `${pct}%` }} />
             </div>
           </li>
         )
