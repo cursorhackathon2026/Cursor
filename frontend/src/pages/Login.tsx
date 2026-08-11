@@ -175,11 +175,14 @@ export default function Login() {
         <h2 className="mb-8 text-center font-display text-3xl font-extrabold">{L.featuresTitle}</h2>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {L.features.map((f: any, i: number) => (
-            <div key={i} className="group animate-fadeup rounded-3xl p-6 text-white shadow-xl transition-transform hover:-translate-y-2"
+            <div key={i} className="group relative animate-fadeup overflow-hidden rounded-3xl p-6 text-white shadow-xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl"
               style={{ background: f.c, animationDelay: `${0.08 * i}s` }}>
-              <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-2xl backdrop-blur">{f.icon}</div>
+              <span className="shine-el pointer-events-none absolute -top-10 left-0 h-40 w-16 bg-white/25 blur-md" style={{ transform: 'translateX(-130%) rotate(12deg)' }} />
+              <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-2xl backdrop-blur animate-floaty transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+                style={{ animationDelay: `${0.5 * i}s` }}>{f.icon}</div>
               <h3 className="font-display text-lg font-bold !text-white">{f.title}</h3>
               <p className="mt-1 text-sm text-white/85">{f.desc}</p>
+              <span className="pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             </div>
           ))}
         </div>
@@ -228,14 +231,23 @@ export default function Login() {
       {/* HOW IT WORKS — DMED tugun uslubi */}
       <section id="how" className="relative z-10 mx-auto max-w-6xl px-5 py-12">
         <h2 className="mb-8 text-center font-display text-3xl font-extrabold">{L.howTitle}</h2>
-        <div className="grid gap-4 md:grid-cols-4">
-          {L.steps.map((s: string[], i: number) => (
-            <div key={i} className="animate-fadeup card p-5 text-center" style={{ animationDelay: `${0.08 * i}s` }}>
-              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-brand/10 font-display text-lg font-extrabold text-brand">{i + 1}</div>
-              <h3 className="font-bold">{s[0]}</h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{s[1]}</p>
+        <div className="relative">
+          {/* oquvchi ulagich chiziq (DMED uslubi) */}
+          <div className="pointer-events-none absolute left-[12%] right-[12%] top-[4.6rem] hidden md:block">
+            <div className="relative h-0.5 w-full rounded-full bg-gradient-to-r from-brand/40 via-teal/50 to-[#2563EB]/40">
+              <span className="absolute -top-[3px] h-2 w-2 rounded-full bg-brand shadow-lg shadow-brand/40 animate-travel" />
             </div>
-          ))}
+          </div>
+          <div className="relative z-10 grid gap-4 md:grid-cols-4">
+            {L.steps.map((s: string[], i: number) => (
+              <div key={i} className="group animate-fadeup card p-5 text-center transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl" style={{ animationDelay: `${0.08 * i}s` }}>
+                <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-brand/10 font-display text-lg font-extrabold text-brand animate-softpulse transition-transform duration-300 group-hover:scale-110"
+                  style={{ animationDelay: `${0.4 * i}s` }}>{i + 1}</div>
+                <h3 className="font-bold">{s[0]}</h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{s[1]}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

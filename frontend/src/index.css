@@ -63,3 +63,13 @@ body {
   background-size: 200% auto; -webkit-background-clip: text; background-clip: text;
   color: transparent; animation: shimmer 6s linear infinite;
 }
+
+/* oquvchi ulagich nuqta (how-it-works) */
+@keyframes travel { 0% { left: 0%; opacity: 0 } 12% { opacity: 1 } 88% { opacity: 1 } 100% { left: 100%; opacity: 0 } }
+.animate-travel { animation: travel 3.6s ease-in-out infinite; }
+/* hover'da porlash sweep */
+@keyframes shine { 0% { transform: translateX(-130%) rotate(12deg) } 100% { transform: translateX(260%) rotate(12deg) } }
+.group:hover .shine-el { animation: shine .9s ease; }
+/* raqam badge yumshoq pulse */
+@keyframes softpulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.08) } }
+.animate-softpulse { animation: softpulse 2.6s ease-in-out infinite; }
