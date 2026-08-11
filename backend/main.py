@@ -57,7 +57,7 @@ def patient_dict(s, p: Patient) -> dict:
         "updated_at": p.updated_at,
         "encounters": [{"ts": e.ts, "vitals": e.vitals, "symptoms": e.symptoms, "assessment": e.assessment} for e in encs],
         "medications": [{"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today} for m in meds],
-        "appointments": [{"id": a.id, "date": a.date, "time": a.time, "reason": a.reason, "status": a.status, "created_at": a.created_at} for a in appts],
+        "appointments": [{"id": a.id, "doctor": a.doctor, "date": a.date, "time": a.time, "reason": a.reason, "status": a.status, "created_at": a.created_at} for a in appts],
         "lifestyle_log": [{"title": l.title, "ts": l.ts} for l in life],
     }
 
@@ -287,17 +287,50 @@ def toggle_medication(body: MedToggle):
         return {"id": m.mid, "name": m.name, "dose": m.dose, "schedule": m.schedule, "taken_today": m.taken_today}
 
 
-class AppointmentIn(BaseModel):
-    patient_id: str
-    date: str
-    reason: str = ""
+def _appt_dict(a: Appointment) -> dict:
+    return {"id": a.id, "patient_id": a.patient_id, "patient_name": a.patient_name,
+            "doctor": a.doctor, "date": a.date, "time": a.time, "reason": a.reason,
+            "status": a.status, "created_at": a.created_at}
+
+
+@app.get("/api/doctors")
+def list_doctors():
+    with get_session() as s:
+        docs = s.exec(select(Staff).where(Staff.role.in_(["mutaxassis", "oilaviy"]))).all()
+        return [{"name": d.name, "role": d.role} for d in docs]
+
+
+@app.get("/api/slots")
+def get_slots(doctor: str, date: str):
+    with get_session() as s:
+        slots = s.exec(select(DoctorSlot).where(DoctorSlot.doctor == doctor, DoctorSlot.date == date).order_by(DoctorSlot.time)).all()
+        return [{"time": sl.time, "is_booked": sl.is_booked} for sl in slots]
 
 
 @app.get("/api/appointments")
 def get_appointments(patient_id: str):
     with get_session() as s:
         appts = s.exec(select(Appointment).where(Appointment.patient_id == patient_id).order_by(Appointment.created_at.desc())).all()
-        return [{"id": a.id, "date": a.date, "time": a.time, "reason": a.reason, "status": a.status, "created_at": a.created_at} for a in appts]
+        return [_appt_dict(a) for a in appts]
+
+
+@app.get("/api/doctor/appointments")
+def doctor_appointments(doctor: str, date: Optional[str] = None):
+    with get_session() as s:
+        q = select(Appointment).where(Appointment.doctor == doctor)
+        appts = s.exec(q).all()
+        if date:
+            appts = [a for a in appts if a.date == date]
+        appts.sort(key=lambda a: (a.date, a.time))
+        return [_appt_dict(a) for a in appts]
+
+
+class AppointmentIn(BaseModel):
+    patient_id: str
+    doctor: str
+    date: str
+    time: str = ""
+    reason: str = ""
 
 
 @app.post("/api/appointments")
@@ -306,13 +339,39 @@ def create_appointment(body: AppointmentIn):
         p = s.get(Patient, body.patient_id)
         if not p:
             raise HTTPException(404, "Bemor topilmadi")
+        # slotni band qilish
+        if body.time:
+            slot = s.exec(select(DoctorSlot).where(
+                DoctorSlot.doctor == body.doctor, DoctorSlot.date == body.date,
+                DoctorSlot.time == body.time)).first()
+            if not slot or slot.is_booked:
+                raise HTTPException(409, "Bu vaqt allaqachon band")
+            slot.is_booked = True
+            s.add(slot)
         ap = Appointment(id=str(uuid.uuid4())[:8], patient_id=p.id, patient_name=p.name,
-                         date=body.date, reason=body.reason, status="so'ralgan",
-                         created_at=datetime.now().isoformat(timespec="minutes"))
+                         doctor=body.doctor, date=body.date, time=body.time, reason=body.reason,
+                         status="so'ralgan", created_at=datetime.now().isoformat(timespec="minutes"))
         s.add(ap)
-        _notify(s, "mutaxassis", f"{p.name}: qabulga yozildi ({body.date})", "appointment")
+        _notify(s, "mutaxassis", f"{p.name}: {body.doctor} qabuliga yozildi ({body.date} {body.time})", "appointment")
         s.commit()
-        return {"id": ap.id, "date": ap.date, "time": ap.time, "reason": ap.reason, "status": ap.status, "created_at": ap.created_at}
+        return _appt_dict(ap)
+
+
+class ApptStatus(BaseModel):
+    status: str
+
+
+@app.post("/api/appointments/{aid}/status")
+def set_appointment_status(aid: str, body: ApptStatus):
+    with get_session() as s:
+        a = s.get(Appointment, aid)
+        if not a:
+            raise HTTPException(404, "Qabul topilmadi")
+        a.status = body.status
+        s.add(a)
+        _notify(s, a.patient_id, f"Qabulingiz holati: {body.status} ({a.date} {a.time})", "appointment")
+        s.commit()
+        return _appt_dict(a)
 
 
 class ReportIn(BaseModel):

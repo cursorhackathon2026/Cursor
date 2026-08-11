@@ -1,6 +1,6 @@
 import type {
   Stats, PatientListItem, Patient, Alert, Assessment, Vitals, Zone,
-  Medication, LifestyleRec, TwinResult, Appointment, LoginResult,
+  Medication, LifestyleRec, TwinResult, Appointment, LoginResult, Doctor, Slot,
 } from './types'
 
 const BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000'
@@ -56,8 +56,15 @@ export const api = {
     post<Medication>('/api/medications/toggle', { patient_id, med_id, taken }),
   appointments: (patient_id: string) =>
     j<Appointment[]>(`/api/appointments?patient_id=${patient_id}`),
-  createAppointment: (patient_id: string, date: string, reason: string) =>
-    post<Appointment>('/api/appointments', { patient_id, date, reason }),
+  doctors: () => j<Doctor[]>('/api/doctors'),
+  slots: (doctor: string, date: string) =>
+    j<Slot[]>(`/api/slots?doctor=${encodeURIComponent(doctor)}&date=${date}`),
+  createAppointment: (patient_id: string, doctor: string, date: string, time: string, reason: string) =>
+    post<Appointment>('/api/appointments', { patient_id, doctor, date, time, reason }),
+  doctorAppointments: (doctor: string) =>
+    j<Appointment[]>(`/api/doctor/appointments?doctor=${encodeURIComponent(doctor)}`),
+  setApptStatus: (id: string, status: string) =>
+    post<Appointment>(`/api/appointments/${id}/status`, { status }),
   createReport: (patient_id: string, note: string, symptoms: string[]) =>
     post<any>('/api/reports', { patient_id, note, symptoms }),
 }

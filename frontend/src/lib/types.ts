@@ -56,10 +56,24 @@ export interface HistoryItem {
 
 export interface Appointment {
   id: string
+  patient_id?: string
+  patient_name?: string
+  doctor?: string
   date: string
+  time?: string
   reason: string
   status: string
   created_at: string
+}
+
+export interface Doctor {
+  name: string
+  role: string
+}
+
+export interface Slot {
+  time: string
+  is_booked: boolean
 }
 
 export interface Patient {

@@ -8,6 +8,7 @@ import NurseCapture from './pages/NurseCapture'
 import Alerts from './pages/Alerts'
 import FamilyDoctor from './pages/FamilyDoctor'
 import PatientHome from './pages/PatientHome'
+import Schedule from './pages/Schedule'
 import type { ReactNode } from 'react'
 
 function Protected({ children }: { children: ReactNode }) {
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/alerts" element={<Protected><Alerts /></Protected>} />
       <Route path="/followup" element={<Protected><FamilyDoctor /></Protected>} />
       <Route path="/patient" element={<Protected><PatientHome /></Protected>} />
+      <Route path="/schedule" element={<Protected><Schedule /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

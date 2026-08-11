@@ -177,6 +177,18 @@ const D: Record<string, Tr> = {
   'ph.reportPh': { uz: 'Bugungi ahvolingiz, shikoyatlaringizni yozing…', ru: 'Опишите ваше самочувствие, жалобы…', en: 'Describe how you feel, any complaints…' },
   'ph.reportSent': { uz: 'Xabaringiz shifokorga yuborildi', ru: 'Ваше сообщение отправлено врачу', en: 'Your message was sent to the doctor' },
 
+  // qabul jadvali (FAZA 2)
+  'ph.doctor': { uz: 'Shifokor', ru: 'Врач', en: 'Doctor' },
+  'ph.chooseSlot': { uz: 'Bo‘sh vaqtni tanlang', ru: 'Выберите свободное время', en: 'Choose a free time' },
+  'ph.noSlots': { uz: 'Bu kunda bo‘sh vaqt yo‘q', ru: 'Нет свободного времени в этот день', en: 'No free slots on this day' },
+  'nav.schedule': { uz: 'Jadval', ru: 'Расписание', en: 'Schedule' },
+  'sch.title': { uz: 'Qabullar jadvali', ru: 'Расписание приёмов', en: 'Appointment schedule' },
+  'sch.none': { uz: 'Qabullar yo‘q', ru: 'Нет приёмов', en: 'No appointments' },
+  'sch.confirm': { uz: 'Tasdiqlash', ru: 'Подтвердить', en: 'Confirm' },
+  'sch.complete': { uz: 'Bajarildi', ru: 'Завершить', en: 'Complete' },
+  'sch.total': { uz: 'Jami qabullar', ru: 'Всего приёмов', en: 'Total appointments' },
+  'sch.pending': { uz: 'Kutilmoqda', ru: 'В ожидании', en: 'Pending' },
+
   // errors
   'err.connect': { uz: 'Serverga ulanib bo‘lmadi', ru: 'Не удалось подключиться к серверу', en: 'Could not connect to server' },
 }
@@ -185,6 +197,10 @@ const D: Record<string, Tr> = {
 const DATA: Record<string, Tr> = {
   // region
   'Navoiy viloyati': { uz: 'Navoiy viloyati', ru: 'Навоийская область', en: 'Navoiy region' },
+  // qabul holatlari
+  "so'ralgan": { uz: "so'ralgan", ru: 'запрошено', en: 'requested' },
+  'tasdiqlangan': { uz: 'tasdiqlangan', ru: 'подтверждено', en: 'confirmed' },
+  'bajarilgan': { uz: 'bajarilgan', ru: 'завершено', en: 'completed' },
   // xavf omillari (risk_engine)
   "Og'ir gipertenziya": { uz: "Og'ir gipertenziya", ru: 'Тяжёлая гипертензия', en: 'Severe hypertension' },
   'Gipertenziya': { uz: 'Gipertenziya', ru: 'Гипертензия', en: 'Hypertension' },

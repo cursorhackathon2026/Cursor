@@ -5,10 +5,12 @@ import { useT } from '../lib/i18n'
 const NAV: Record<Role, { to: string; key: string; icon: string }[]> = {
   mutaxassis: [
     { to: '/dashboard', key: 'nav.home', icon: '▦' },
+    { to: '/schedule', key: 'nav.schedule', icon: '📅' },
     { to: '/alerts', key: 'nav.alerts', icon: '🔔' },
   ],
   oilaviy: [
     { to: '/followup', key: 'nav.activeCall', icon: '📞' },
+    { to: '/schedule', key: 'nav.schedule', icon: '📅' },
     { to: '/alerts', key: 'nav.alerts', icon: '🔔' },
   ],
   hamshira: [{ to: '/capture', key: 'nav.addVisit', icon: '➕' }],

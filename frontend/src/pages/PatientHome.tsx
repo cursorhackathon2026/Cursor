@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { getSession } from '../lib/store'
-import type { Patient, Medication, LifestyleRec, Appointment } from '../lib/types'
+import type { Patient, Medication, LifestyleRec, Appointment, Doctor, Slot } from '../lib/types'
 import { TopBar } from '../components/TopBar'
 import { ZoneBadge } from '../components/ZoneBadge'
 import { useT } from '../lib/i18n'
+
+const DATES = Array.from({ length: 5 }, (_, i) => {
+  const d = new Date(); d.setDate(d.getDate() + i); return d.toISOString().slice(0, 10)
+})
 
 export default function PatientHome() {
   const session = getSession()
@@ -16,7 +20,12 @@ export default function PatientHome() {
   const [recs, setRecs] = useState<LifestyleRec[]>([])
   const [accepted, setAccepted] = useState<Set<string>>(new Set())
   const [appts, setAppts] = useState<Appointment[]>([])
-  const [apDate, setApDate] = useState('')
+  // qabul (slot)
+  const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [docSel, setDocSel] = useState('')
+  const [apDate, setApDate] = useState(DATES[0])
+  const [slots, setSlots] = useState<Slot[]>([])
+  const [timeSel, setTimeSel] = useState('')
   const [apReason, setApReason] = useState('')
   const [reportNote, setReportNote] = useState('')
   const [reportSent, setReportSent] = useState(false)
@@ -28,6 +37,12 @@ export default function PatientHome() {
     api.appointments(pid).then(setAppts)
     api.lifestyle(pid, lang).then((d) => setRecs(d.recommendations)).catch(() => {})
   }, [pid, lang])
+
+  useEffect(() => { api.doctors().then((d) => { setDoctors(d); if (d[0]) setDocSel(d[0].name) }) }, [])
+  useEffect(() => {
+    if (docSel && apDate) api.slots(docSel, apDate).then(setSlots).catch(() => setSlots([]))
+    setTimeSel('')
+  }, [docSel, apDate])
 
   if (!pid) return <Navigate to="/" replace />
 
@@ -41,9 +56,10 @@ export default function PatientHome() {
   }
   const book = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!apDate) return
-    const ap = await api.createAppointment(pid, apDate, apReason)
-    setAppts((xs) => [ap, ...xs]); setApDate(''); setApReason('')
+    if (!docSel || !apDate || !timeSel) return
+    const ap = await api.createAppointment(pid, docSel, apDate, timeSel, apReason)
+    setAppts((xs) => [ap, ...xs]); setApReason(''); setTimeSel('')
+    api.slots(docSel, apDate).then(setSlots)
   }
   const sendReport = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,11 +69,13 @@ export default function PatientHome() {
   }
 
   const takenCount = meds.filter((m) => m.taken_today).length
+  const free = slots.filter((s) => !s.is_booked)
 
   return (
     <>
       <TopBar title={t('ph.title')} subtitle={session?.name} />
       <div className="mx-auto w-full max-w-2xl p-4 md:p-6 space-y-5">
+        {/* Holat */}
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <div>
@@ -74,6 +92,7 @@ export default function PatientHome() {
           )}
         </div>
 
+        {/* Dorilar */}
         <div className="card p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold">💊 {t('ph.meds')}</h3>
@@ -84,16 +103,14 @@ export default function PatientHome() {
               <button key={m.id} onClick={() => toggleMed(m)}
                 className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${m.taken_today ? 'border-zone-green bg-green-50 dark:bg-green-950/30' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                 <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${m.taken_today ? 'border-zone-green bg-zone-green text-white' : 'border-slate-300'}`}>{m.taken_today ? '✓' : ''}</span>
-                <span className="flex-1">
-                  <span className="block text-sm font-medium">{m.name} · {m.dose}</span>
-                  <span className="block text-xs text-slate-500 dark:text-slate-400">{m.schedule}</span>
-                </span>
+                <span className="flex-1"><span className="block text-sm font-medium">{m.name} · {m.dose}</span><span className="block text-xs text-slate-500 dark:text-slate-400">{m.schedule}</span></span>
               </button>
             ))}
             {meds.length === 0 && <p className="text-sm text-slate-400">{t('ph.noMeds')}</p>}
           </div>
         </div>
 
+        {/* Raqamli egizak tavsiyalari */}
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-1">
             <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand/10 text-brand">✦</span>
@@ -118,25 +135,59 @@ export default function PatientHome() {
           </div>
         </div>
 
+        {/* Qabulga yozilish — slot jadvali */}
         <div className="card p-5">
           <h3 className="font-bold mb-3">📅 {t('ph.book')}</h3>
           <form onSubmit={book} className="space-y-3">
-            <div><label className="label">{t('ph.date')}</label><input type="date" className="input" value={apDate} onChange={(e) => setApDate(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">{t('ph.doctor')}</label>
+                <select className="input" value={docSel} onChange={(e) => setDocSel(e.target.value)}>
+                  {doctors.map((d) => <option key={d.name} value={d.name}>{d.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label">{t('ph.date')}</label>
+                <select className="input" value={apDate} onChange={(e) => setApDate(e.target.value)}>
+                  {DATES.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="label">{t('ph.chooseSlot')}</label>
+              {free.length === 0 ? (
+                <p className="text-sm text-slate-400">{t('ph.noSlots')}</p>
+              ) : (
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                  {slots.map((s) => (
+                    <button type="button" key={s.time} disabled={s.is_booked}
+                      onClick={() => setTimeSel(s.time)}
+                      className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${
+                        s.is_booked ? 'cursor-not-allowed bg-slate-100 text-slate-300 line-through dark:bg-slate-800 dark:text-slate-600'
+                        : timeSel === s.time ? 'bg-brand text-white'
+                        : 'border border-slate-200 hover:bg-brand/10 hover:text-brand dark:border-slate-700'}`}>
+                      {s.time}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div><label className="label">{t('ph.reason')}</label><input className="input" value={apReason} onChange={(e) => setApReason(e.target.value)} /></div>
-            <button type="submit" className="btn-primary w-full">{t('ph.bookBtn')}</button>
+            <button type="submit" disabled={!timeSel} className="btn-primary w-full">{t('ph.bookBtn')}</button>
           </form>
           {appts.length > 0 && (
             <div className="mt-4 space-y-2">
               {appts.map((a) => (
                 <div key={a.id} className="flex items-center justify-between rounded-lg bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-sm">
-                  <span>{a.date}{a.reason ? ` · ${a.reason}` : ''}</span>
-                  <span className="text-xs text-brand font-medium">{a.status}</span>
+                  <span>{a.date} {a.time} · {a.doctor}{a.reason ? ` · ${a.reason}` : ''}</span>
+                  <span className="text-xs font-medium text-brand">{td(a.status)}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
+        {/* Ahvol xabari */}
         <div className="card p-5">
           <h3 className="font-bold mb-3">📝 {t('ph.report')}</h3>
           <form onSubmit={sendReport} className="space-y-3">
