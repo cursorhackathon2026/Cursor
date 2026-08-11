@@ -9,7 +9,7 @@ import { LangSwitcher } from '../components/LangSwitcher'
 const COPY: Record<string, any> = {
   uz: {
     hero1: 'MedAI —',
-    hero2: 'bemor kelajagini bashorat qiladi',
+    hero2: 'salomatligingiz uchun qayg‘uradi',
     sub: 'Bemorlarni rang-zona bo‘yicha kuzatadigan, 5 yillik xavfni bashorat qiladigan va shifokorga izohli optimal davolash rejasi taklif qiladigan AI raqamli egizak platformasi.',
     start: 'Boshlash',
     more: 'Qanday ishlaydi?',
@@ -27,7 +27,7 @@ const COPY: Record<string, any> = {
   },
   ru: {
     hero1: 'MedAI —',
-    hero2: 'прогнозирует будущее пациента',
+    hero2: 'заботится о вашем здоровье',
     sub: 'ИИ-платформа цифрового двойника: наблюдает пациентов по цветовым зонам, прогнозирует риски на 5 лет и предлагает врачу оптимальный план лечения с пояснениями.',
     start: 'Начать',
     more: 'Как это работает?',
@@ -45,7 +45,7 @@ const COPY: Record<string, any> = {
   },
   en: {
     hero1: 'MedAI —',
-    hero2: 'forecasts the patient’s future',
+    hero2: 'cares for your health',
     sub: 'An AI digital-twin platform that monitors patients by color zones, forecasts 5-year risks, and proposes the optimal treatment plan — with rationale — for the doctor.',
     start: 'Get started',
     more: 'How it works',
@@ -115,7 +115,7 @@ export default function Login() {
             ✦ MedAI · AI Raqamli egizak platformasi
           </span>
           <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight md:text-5xl">
-            {L.hero1}<br /><span className="gradient-text">{L.hero2}</span>
+            <span className="brand-mark">{L.hero1}</span><br /><span className="gradient-text">{L.hero2}</span>
           </h1>
           <p className="mt-4 max-w-lg text-slate-600 dark:text-slate-300">{L.sub}</p>
           <div className="mt-6 flex flex-wrap gap-3">

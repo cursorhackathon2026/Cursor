@@ -64,6 +64,22 @@ body {
   color: transparent; animation: shimmer 6s linear infinite;
 }
 
+/* MedAI wordmark — oqib turuvchi gradient + porlash pulsi */
+@keyframes brandglow {
+  0%, 100% { filter: drop-shadow(0 1px 0 rgba(180,36,117,0)); }
+  50% { filter: drop-shadow(0 3px 16px rgba(180,36,117,.38)); }
+}
+.brand-mark {
+  display: inline-block;
+  background: linear-gradient(90deg, #B42475, #117E96, #2563EB, #B42475);
+  background-size: 300% auto; -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite, brandglow 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark { animation: none; }
+}
+
 /* oquvchi ulagich nuqta (how-it-works) */
 @keyframes travel { 0% { left: 0%; opacity: 0 } 12% { opacity: 1 } 88% { opacity: 1 } 100% { left: 100%; opacity: 0 } }
 .animate-travel { animation: travel 3.6s ease-in-out infinite; }
