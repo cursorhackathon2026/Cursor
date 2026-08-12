@@ -58,6 +58,22 @@ export interface Medication {
   taken_today: boolean
 }
 
+export interface PharmaAlt { name: string; count: number }
+
+export interface PharmaInfo {
+  found: boolean
+  name_uz?: string
+  atc?: string
+  availability: 'keng' | 'cheklangan' | 'kamyob' | "yo'q"
+  count: number
+  doses?: string[]
+  dose_match?: boolean | null
+  rx?: string
+  local?: boolean
+  trades?: string[]
+  alternatives: PharmaAlt[]
+}
+
 export interface PlanItem {
   kind: MedKind
   name: string
@@ -65,6 +81,7 @@ export interface PlanItem {
   schedule: string
   rationale: string
   warn?: string
+  pharma?: PharmaInfo
 }
 
 export interface TreatmentPlan {

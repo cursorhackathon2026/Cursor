@@ -29,6 +29,7 @@ _load_env()
 from sqlmodel import select
 import risk_engine
 import llm
+import pharma
 import seed as seed_mod
 from db import get_session, norm_phone
 from models import (
@@ -540,6 +541,17 @@ class PlanGenIn(BaseModel):
     lang: str = "uz"
 
 
+_MED_KINDS = {"dori", "ukol", "osma", "ingalyator"}
+
+
+def _enrich_pharma(plan: dict) -> dict:
+    """Har dori bandiga O'zbekiston reyestri bo'yicha mavjudlik ma'lumotini qo'shadi."""
+    for it in plan.get("items", []):
+        if it.get("kind") in _MED_KINDS and it.get("name"):
+            it["pharma"] = pharma.check_availability(it["name"], it.get("dose", ""))
+    return plan
+
+
 @app.post("/api/treatment/generate")
 def treatment_generate(body: PlanGenIn):
     """Diagnoz + bemor holatiга qarab optimal davolash rejasini AI generatsiya qiladi (taklif)."""
@@ -547,7 +559,18 @@ def treatment_generate(body: PlanGenIn):
         p = s.get(Patient, body.patient_id)
         if not p:
             raise HTTPException(404, "Bemor topilmadi")
-        return llm.generate_treatment_plan(patient_dict(s, p), body.diagnosis, body.lang)
+        return _enrich_pharma(llm.generate_treatment_plan(patient_dict(s, p), body.diagnosis, body.lang))
+
+
+class PharmaCheckIn(BaseModel):
+    name: str
+    dose: str = ""
+
+
+@app.post("/api/pharma/check")
+def pharma_check(body: PharmaCheckIn):
+    """Dori O'zbekiston reyestrida bor-yo'qligi + doza + muqobil (shifokor tahrirlaganda)."""
+    return pharma.check_availability(body.name, body.dose)
 
 
 class PlanItem(BaseModel):

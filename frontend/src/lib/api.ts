@@ -1,7 +1,7 @@
 import type {
   Stats, PatientListItem, Patient, Alert, Assessment, Vitals, Zone,
   Medication, LifestyleRec, TwinResult, Appointment, LoginResult, Doctor, Slot,
-  Notif, ReportItem, Adherence, Prognosis, TreatmentPlan, PlanItem,
+  Notif, ReportItem, Adherence, Prognosis, TreatmentPlan, PlanItem, PharmaInfo,
 } from './types'
 
 const BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000'
@@ -95,4 +95,6 @@ export const api = {
     post<{ consequence: string }>('/api/treatment/consequence', { patient_id, original, changed, lang }),
   confirmTreatment: (patient_id: string, diagnosis: string, items: PlanItem[]) =>
     post<{ ok: boolean; count: number; medications: Medication[] }>('/api/treatment/confirm', { patient_id, diagnosis, items }),
+  pharmaCheck: (name: string, dose = '') =>
+    post<PharmaInfo>('/api/pharma/check', { name, dose }),
 }
