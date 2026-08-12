@@ -176,16 +176,20 @@ const D: Record<string, Tr> = {
   'tp.empty': { uz: 'Bandlar yo‘q — tashxis kiriting va AI reja tuzsin.', ru: 'Нет пунктов — введите диагноз и сгенерируйте план.', en: 'No items — enter a diagnosis and generate.' },
 
   // O'zbekiston dori reyestri (mavjudlik)
-  'pharma.keng': { uz: 'O‘zbekistonda mavjud', ru: 'Есть в Узбекистане', en: 'Available in Uzbekistan' },
-  'pharma.cheklangan': { uz: 'Kam tarqalgan', ru: 'Ограниченно доступен', en: 'Limited availability' },
-  'pharma.kamyob': { uz: 'Kamyob', ru: 'Редкий', en: 'Rare' },
+  'pharma.keng': { uz: 'Dorixonalarda keng mavjud', ru: 'Широко доступен в аптеках', en: 'Widely available in pharmacies' },
+  'pharma.cheklangan': { uz: 'Cheklangan — yirik dorixonalarda', ru: 'Ограниченно — в крупных аптеках', en: 'Limited — at larger pharmacies' },
+  'pharma.kamyob': { uz: 'Kamyob dori', ru: 'Редкий препарат', en: 'Rare medicine' },
   "pharma.yo'q": { uz: 'Reyestrda topilmadi', ru: 'Не найден в реестре', en: 'Not in registry' },
-  'pharma.count': { uz: 'ta preparat', ru: 'преп.', en: 'products' },
-  'pharma.alt': { uz: 'Muqobil', ru: 'Альтернатива', en: 'Alternative' },
+  'pharma.alt': { uz: 'Muqobil', ru: 'Альтернатива', en: 'Alternatives' },
+  'pharma.hubs': {
+    uz: 'Tuman/shahar/viloyat va poytaxt kasalxonalari qoshidagi yirik dorixonalarda (mas. «Markaziy apteka») topilishi mumkin.',
+    ru: 'Можно найти в крупных аптеках при районных/городских/областных и столичных больницах (напр. «Центральная аптека»).',
+    en: 'Can be found at large pharmacies attached to district/city/regional and capital hospitals (e.g. a “Central pharmacy”).',
+  },
   'pharma.doseNo': { uz: 'so‘ralgan doza reyestrda yo‘q · mavjud', ru: 'запрошенной дозы нет · доступно', en: 'requested dose not listed · available' },
   'pharma.rx': { uz: 'retsept bo‘yicha', ru: 'по рецепту', en: 'prescription' },
   'pharma.otc': { uz: 'retseptsiz', ru: 'без рецепта', en: 'OTC' },
-  'pharma.local': { uz: 'mahalliy', ru: 'местный', en: 'local' },
+  'pharma.local': { uz: 'mahalliy ishlab chiqarilgan', ru: 'местного производства', en: 'locally made' },
   'pharma.checking': { uz: 'reyestr tekshirilmoqda…', ru: 'проверка реестра…', en: 'checking registry…' },
   'pharma.source': { uz: 'Manba: O‘zbekiston dori reyestri (uzpharm-control.uz)', ru: 'Источник: реестр ЛС Узбекистана (uzpharm-control.uz)', en: 'Source: Uzbekistan drug registry (uzpharm-control.uz)' },
 

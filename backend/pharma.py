@@ -110,23 +110,26 @@ def _availability(count):
 
 
 def alternatives(key, limit=3):
-    """Xuddi shu ATX kichik guruhidagi boshqa (ko'proq tarqalgan) dorilar."""
+    """Xuddi shu ATX (terapevtik sinf) dagi boshqa, tarqalganroq dorilar.
+    Avval aniq kichik guruh (ATX-5), kam bo'lsa kengroq guruh (ATX-4)."""
     e = _INNS.get(key)
     if not e:
         return []
-    a5 = (e.get("atc") or "")[:5]
-    out = []
-    for k in _ATC.get(a5, []):
-        if k == key or k not in _INNS:
+    atc = e.get("atc") or ""
+    if len(atc) < 4:
+        return []
+    for plen in (5, 4):
+        pref = atc[:plen]
+        if len(pref) < 4:
             continue
-        alt = _INNS[k]
-        # kombinatsiya (+) va noaniq nomlarni tashlaymiz — toza bitta modda
-        if '+' in alt["cyr"] or 'отсутств' in alt["cyr"].lower() or alt["count"] < 2:
-            continue
-        out.append({"name": _display(alt["cyr"]), "count": alt["count"]})
-        if len(out) >= limit:
-            break
-    return out
+        cands = [(k, v) for k, v in _INNS.items()
+                 if k != key and (v.get("atc") or "").startswith(pref)
+                 and '+' not in v["cyr"] and 'отсутств' not in v["cyr"].lower()
+                 and v["count"] >= 2]
+        cands.sort(key=lambda kv: -kv[1]["count"])
+        if len(cands) >= 2 or plen == 4:
+            return [{"name": _display(v["cyr"]), "count": v["count"]} for _, v in cands[:limit]]
+    return []
 
 
 def check_availability(name, dose=""):
@@ -139,7 +142,7 @@ def check_availability(name, dose=""):
     dt = _dose_token(dose)
     dose_match = (dt in doses) if dt else None
     avail = _availability(e["count"])
-    alts = alternatives(key) if avail != "keng" else []
+    alts = alternatives(key)   # muqobil har doim (o'xshash variantlar sifatida ham)
     return {
         "found": True,
         "query": name,

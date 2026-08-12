@@ -27,11 +27,11 @@ function PharmaBadge({ p, checking, name }: { p?: PharmaInfo; checking?: boolean
   if (!p) return null
   const cls = PH_STYLE[p.availability] ?? PH_STYLE["yo'q"]
   const diff = p.found && p.name_uz && p.name_uz.toLowerCase() !== name.trim().toLowerCase()
+  const rare = p.availability === 'cheklangan' || p.availability === 'kamyob' || p.availability === "yo'q"
   return (
     <div className={`mt-2 rounded-lg border-l-2 px-3 py-2 text-xs ${cls}`} title={t('pharma.source')}>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="font-semibold">💊 {PH_ICON[p.availability]} {t(`pharma.${p.availability}`)}</span>
-        {p.found && <span>· {p.count} {t('pharma.count')}</span>}
         {diff && <span className="opacity-80">· {p.name_uz}</span>}
         {p.found && p.rx && <span className="rounded-full bg-black/5 px-1.5 dark:bg-white/10">{p.rx === 'retsept' ? t('pharma.rx') : t('pharma.otc')}</span>}
         {p.found && p.local && <span className="rounded-full bg-black/5 px-1.5 dark:bg-white/10">🇺🇿 {t('pharma.local')}</span>}
@@ -39,8 +39,9 @@ function PharmaBadge({ p, checking, name }: { p?: PharmaInfo; checking?: boolean
       {p.found && p.dose_match === false && !!p.doses?.length && (
         <p className="mt-1">{t('pharma.doseNo')}: {p.doses.join(', ')}</p>
       )}
+      {rare && <p className="mt-1 opacity-90">🏥 {t('pharma.hubs')}</p>}
       {p.alternatives.length > 0 && (
-        <p className="mt-1"><b>{t('pharma.alt')}:</b> {p.alternatives.map((a) => `${a.name} (${a.count})`).join(' · ')}</p>
+        <p className="mt-1"><b>{t('pharma.alt')}:</b> {p.alternatives.map((a) => a.name).join(' · ')}</p>
       )}
     </div>
   )
