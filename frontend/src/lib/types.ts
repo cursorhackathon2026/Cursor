@@ -62,9 +62,10 @@ export interface PharmaAlt { name: string; count: number }
 
 export interface PharmaInfo {
   found: boolean
+  annulled?: boolean
   name_uz?: string
   atc?: string
-  availability: 'keng' | 'cheklangan' | 'kamyob' | "yo'q"
+  availability: 'keng' | 'cheklangan' | 'kamyob' | "yo'q" | 'annullyatsiya'
   count: number
   doses?: string[]
   dose_match?: boolean | null

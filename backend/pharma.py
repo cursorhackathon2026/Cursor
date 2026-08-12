@@ -20,6 +20,7 @@ except Exception:
 _INNS = _DB["inns"]
 _TRADES = _DB["trades"]
 _ATC = _DB["atc"]
+_ANNUL = _DB.get("annulled", {})   # ro'yxatdan chiqarilgan dorilar
 _KEYS = list(_INNS.keys())
 
 _CYR = {'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh',
@@ -109,21 +110,16 @@ def _availability(count):
     return "kamyob"          # kamyob
 
 
-def alternatives(key, limit=3):
-    """Xuddi shu ATX (terapevtik sinf) dagi boshqa, tarqalganroq dorilar.
-    Avval aniq kichik guruh (ATX-5), kam bo'lsa kengroq guruh (ATX-4)."""
-    e = _INNS.get(key)
-    if not e:
-        return []
-    atc = e.get("atc") or ""
-    if len(atc) < 4:
+def _alts_for_atc(atc, exclude=None, limit=3):
+    """Berilgan ATX (terapevtik sinf) dagi tarqalganroq dorilar. ATX-5, kam bo'lsa ATX-4."""
+    if not atc or len(atc) < 4:
         return []
     for plen in (5, 4):
         pref = atc[:plen]
         if len(pref) < 4:
             continue
         cands = [(k, v) for k, v in _INNS.items()
-                 if k != key and (v.get("atc") or "").startswith(pref)
+                 if k != exclude and (v.get("atc") or "").startswith(pref)
                  and '+' not in v["cyr"] and 'отсутств' not in v["cyr"].lower()
                  and v["count"] >= 2]
         cands.sort(key=lambda kv: -kv[1]["count"])
@@ -132,10 +128,21 @@ def alternatives(key, limit=3):
     return []
 
 
+def alternatives(key, limit=3):
+    e = _INNS.get(key)
+    return _alts_for_atc(e.get("atc") or "", exclude=key, limit=limit) if e else []
+
+
 def check_availability(name, dose=""):
     key = _find(name)
     if not key:
-        return {"found": False, "query": name, "availability": "yo'q",
+        # ro'yxatdan chiqarilgan (annullyatsiya) dorimi?
+        ak = _ANNUL.get(_clean(name))
+        if ak:
+            return {"found": False, "annulled": True, "query": name, "name_uz": ak["name"],
+                    "availability": "annullyatsiya", "count": 0, "doses": [], "dose_match": None,
+                    "alternatives": _alts_for_atc(ak.get("atc", ""))}
+        return {"found": False, "annulled": False, "query": name, "availability": "yo'q",
                 "count": 0, "doses": [], "dose_match": None, "alternatives": []}
     e = _INNS[key]
     doses = e.get("strengths", [])
@@ -145,6 +152,7 @@ def check_availability(name, dose=""):
     alts = alternatives(key)   # muqobil har doim (o'xshash variantlar sifatida ham)
     return {
         "found": True,
+        "annulled": False,
         "query": name,
         "name_uz": _display(e["cyr"]),
         "atc": e.get("atc", ""),

@@ -11,8 +11,38 @@ import re
 import os
 import openpyxl
 
-SRC = "/Users/macbook_uz/Downloads/1. Отеч. и заруб. лек.ср.xlsx"
+_DIR = "/Users/macbook_uz/Downloads/N30-23.07.2026"
+SRC = os.path.join(_DIR, "1. Отеч. и заруб. лек.ср.xlsx")
+if not os.path.exists(SRC):
+    SRC = "/Users/macbook_uz/Downloads/1. Отеч. и заруб. лек.ср.xlsx"
+ANNUL = os.path.join(_DIR, "6. Аннул.лек.срва .xls")
 OUT = os.path.join(os.path.dirname(__file__), "pharma_registry.json")
+
+
+def parse_annulled():
+    """#6: ro'yxatdan chiqarilgan (annullyatsiya) dorilar -> {norm_kalit: {name, atc}}."""
+    out = {}
+    if not os.path.exists(ANNUL):
+        return out
+    try:
+        import xlrd
+        ws = xlrd.open_workbook(ANNUL).sheet_by_index(0)
+    except Exception:
+        return out
+    for r in range(2, ws.nrows):
+        trade = str(ws.cell_value(r, 1))
+        inn = str(ws.cell_value(r, 2)).strip()
+        atc = (str(ws.cell_value(r, 7)).strip() if ws.ncols > 7 else "")
+        cyr = re.split(r'[(\n]', trade)[0].strip()
+        mlat = re.search(r'\(([^)\n]+)', trade)
+        latin = mlat.group(1).strip() if mlat else ""
+        display = (inn or latin or cyr).strip().title()
+        entry = {"name": display, "atc": atc}
+        for cand in [inn, (latin.split()[0] if latin else ""), cyr]:
+            k = re.sub(r'[^a-z0-9]', '', ''.join(_CYR.get(ch, ch) for ch in str(cand).lower()))
+            if k and len(k) > 2:
+                out.setdefault(k, entry)
+    return out
 
 # Kirill -> lotin (INN/savdo nomini solishtirish uchun)
 _CYR = {
@@ -104,7 +134,9 @@ def main():
                  for k, e in inns.items()},
         "trades": trades,
         "atc": {a: [k for k, _ in v[:8]] for a, v in atc_index.items()},
+        "annulled": parse_annulled(),
     }
+    print("  annullyatsiya:", len(data["annulled"]), "kalit")
     with open(OUT, "w") as f:
         json.dump(data, f, ensure_ascii=False)
     print(f"Yozildi: {OUT}")

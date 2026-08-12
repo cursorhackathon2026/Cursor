@@ -18,8 +18,9 @@ const PH_STYLE: Record<string, string> = {
   cheklangan: 'bg-amber-50 text-amber-700 border-amber-400 dark:bg-amber-950/40 dark:text-amber-300',
   kamyob: 'bg-orange-50 text-orange-700 border-orange-400 dark:bg-orange-950/40 dark:text-orange-300',
   "yo'q": 'bg-red-50 text-red-700 border-red-400 dark:bg-red-950/40 dark:text-red-300',
+  annullyatsiya: 'bg-red-100 text-red-800 border-red-600 dark:bg-red-950/60 dark:text-red-200',
 }
-const PH_ICON: Record<string, string> = { keng: '✓', cheklangan: '◐', kamyob: '⚠', "yo'q": '✗' }
+const PH_ICON: Record<string, string> = { keng: '✓', cheklangan: '◐', kamyob: '⚠', "yo'q": '✗', annullyatsiya: '⛔' }
 
 function PharmaBadge({ p, checking, name }: { p?: PharmaInfo; checking?: boolean; name: string }) {
   const { t } = useT()
@@ -27,7 +28,8 @@ function PharmaBadge({ p, checking, name }: { p?: PharmaInfo; checking?: boolean
   if (!p) return null
   const cls = PH_STYLE[p.availability] ?? PH_STYLE["yo'q"]
   const diff = p.found && p.name_uz && p.name_uz.toLowerCase() !== name.trim().toLowerCase()
-  const rare = p.availability === 'cheklangan' || p.availability === 'kamyob' || p.availability === "yo'q"
+  const annulled = p.availability === 'annullyatsiya'
+  const rare = !annulled && (p.availability === 'cheklangan' || p.availability === 'kamyob' || p.availability === "yo'q")
   return (
     <div className={`mt-2 rounded-lg border-l-2 px-3 py-2 text-xs ${cls}`} title={t('pharma.source')}>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -39,6 +41,7 @@ function PharmaBadge({ p, checking, name }: { p?: PharmaInfo; checking?: boolean
       {p.found && p.dose_match === false && !!p.doses?.length && (
         <p className="mt-1">{t('pharma.doseNo')}: {p.doses.join(', ')}</p>
       )}
+      {annulled && <p className="mt-1 font-semibold">⛔ {t('pharma.annulNote')}</p>}
       {rare && <p className="mt-1 opacity-90">🏥 {t('pharma.hubs')}</p>}
       {p.alternatives.length > 0 && (
         <p className="mt-1"><b>{t('pharma.alt')}:</b> {p.alternatives.map((a) => a.name).join(' · ')}</p>

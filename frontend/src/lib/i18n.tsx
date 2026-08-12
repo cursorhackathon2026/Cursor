@@ -183,6 +183,8 @@ const D: Record<string, Tr> = {
   'pharma.cheklangan': { uz: 'Cheklangan — yirik dorixonalarda', ru: 'Ограниченно — в крупных аптеках', en: 'Limited — at larger pharmacies' },
   'pharma.kamyob': { uz: 'Kamyob dori', ru: 'Редкий препарат', en: 'Rare medicine' },
   "pharma.yo'q": { uz: 'Reyestrda topilmadi', ru: 'Не найден в реестре', en: 'Not in registry' },
+  'pharma.annullyatsiya': { uz: 'Ro‘yxatdan chiqarilgan (annullyatsiya)', ru: 'Аннулирован (отозван)', en: 'Annulled (withdrawn)' },
+  'pharma.annulNote': { uz: 'Bu dori O‘zbekistonda ro‘yxatdan chiqarilgan — tayinlamang, muqobil tanlang.', ru: 'Этот препарат аннулирован в Узбекистане — не назначайте, выберите альтернативу.', en: 'This drug is annulled in Uzbekistan — do not prescribe, choose an alternative.' },
   'pharma.alt': { uz: 'Muqobil', ru: 'Альтернатива', en: 'Alternatives' },
   'pharma.hubs': {
     uz: 'Tuman/shahar/viloyat va poytaxt kasalxonalari qoshidagi yirik dorixonalarda (mas. «Markaziy apteka») topilishi mumkin.',
