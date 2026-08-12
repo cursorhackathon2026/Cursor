@@ -90,65 +90,75 @@ def enrich_recommendation(zone, factors, fallback, lang="uz"):
     return out or fallback
 
 
-# ---------- #12: Digital Twin — dori xavfsizligini baholash (shifokor) ----------
+# ---------- #12: Digital Twin — davolashni EGIZAKDA sinash (simulyatsiya) ----------
 _SYSTEM_TWIN = (
-    "Siz bemorning RAQAMLI EGIZAGI — klinik qaror qo'llab-quvvatlash tizimisiz. "
-    "Shifokor taklif qilgan dorini bemorning surunkali kasalliklari, allergiyalari, "
-    "homiladorligi va joriy ko'rsatkichlariga qarab baholaysiz: samaradorlik, "
-    "o'zaro ta'sir (interaksiya), kontrindikatsiya va hayot uchun xavf. "
-    "Siz DORI BELGILAMAYSIZ — shifokor qaroriga yordam berasiz. "
-    "Faqat JSON qaytaring: "
-    '{"level":"Xavfsiz|Ehtiyot|Xavfli","warnings":["qisqa ogohlantirish"],"summary":"1-2 jumla xulosa"}. '
-    "MUHIM: 'level' qiymati DOIM aynan Xavfsiz/Ehtiyot/Xavfli bo'lsin; warnings va summary matnlari so'ralgan tilда bo'lsin."
+    "Siz bemorning RAQAMLI EGIZAGISIZ — xavfsiz simulyatsiya. Shifokor REAL bemorni "
+    "davolamasdan, avval EGIZAKDA shu davolashni sinab ko'rmoqchi. Bemorning kasallik "
+    "tarixi, allergiyalari va joriy ko'rsatkichlariga qarab, bu dori/davolash qo'llansa "
+    "NIMA bo'lishini bashorat qiling: (1) asosiy kasallikka ta'siri, (2) ko'rsatkichlardagi "
+    "kutilayotgan o'zgarishlar, (3) aynan SHU BEMOR uchun ehtimoliy nojo'ya ta'sirlar "
+    "(UMUMIY emas — aniq nomlab, mas. 'quruq yo'tal', 'gipoglikemiya', 'giperkaliemiya'). "
+    "Faqat JSON: {\"level\":\"Xavfsiz|Ehtiyot|Xavfli\",\"effect\":\"asosiy ta'sir, 1 jumla\","
+    "\"changes\":[\"ko'rsatkich o'zgarishi, mas: qon bosimi ~15 mmHg pasayadi\"],"
+    "\"side_effects\":[\"shu doriga xos aniq nojo'ya ta'sir\"],\"summary\":\"1-2 jumla natija\"}. "
+    "'level' DOIM aynan Xavfsiz/Ehtiyot/Xavfli; barcha matn so'ralgan tilда."
 )
 
 
 def twin_evaluate(patient, drug, dose, lang="uz"):
-    """Qoida (allergiya) + LLM. Qaytadi: {level, warnings, summary}."""
-    conditions = ", ".join(patient.get("conditions", [])) or "yo'q"
+    """Egizak simulyatsiyasi: {level, warnings, summary, effect, changes, side_effects}."""
+    conditions = patient.get("conditions", [])
     allergies = patient.get("allergies", [])
-    allergies_str = ", ".join(allergies) or "yo'q"
-    last = patient["encounters"][-1]["vitals"] if patient["encounters"] else {}
-    vit = f"BP {last.get('bp_sys')}/{last.get('bp_dia')}, Hb {last.get('hemoglobin')}, Glu {last.get('glucose')}, {last.get('gestational_week')}-hafta homilalik"
+    hist = "; ".join(f"{h.get('year')}: {h.get('event')}" for h in patient.get("history", [])[-4:]) or "—"
 
     _AW = {
-        "uz": "Bemorда {a} allergiyasi bor — bu dori mos kelmasligi mumkin!",
-        "ru": "У пациента аллергия на {a} — препарат может быть противопоказан!",
-        "en": "Patient is allergic to {a} — this drug may be contraindicated!",
+        "uz": "Bemorда {a} allergiyasi bor — bu davolash mos kelmasligi mumkin!",
+        "ru": "У пациента аллергия на {a} — лечение может быть противопоказано!",
+        "en": "Patient is allergic to {a} — this treatment may be contraindicated!",
     }
-    # Kafolatlangan qoida: allergiya mosligi -> Xavfli
     rule_warnings = []
     for a in allergies:
         if a and (a.lower() in drug.lower() or drug.lower() in a.lower()):
             rule_warnings.append(_AW.get(lang, _AW["uz"]).format(a=a))
 
-    user = (f"Bemor: {patient['name']}, {patient['age']} yosh.\n"
-            f"Surunkali kasalliklar: {conditions}\n"
-            f"Allergiyalar: {allergies_str}\n"
-            f"Joriy ko'rsatkichlar: {vit}\n"
-            f"Shifokor taklif qilgan dori: {drug} {dose}\n\n"
-            "Ushbu dorini baholang (JSON).")
+    user = (f"Bemor: {patient.get('age')} yosh, jins {patient.get('gender', 'F')}.\n"
+            f"Surunkali kasalliklar: {_join(conditions)}\n"
+            f"Allergiyalar: {_join(allergies)}\n"
+            f"Kasallik tarixi: {hist}\n"
+            f"Joriy ko'rsatkichlar: {_vitals_line(patient)}\n"
+            f"EGIZAKDA sinaladigan davolash: {drug} {dose}\n\n"
+            "Egizakda simulyatsiya qilib, natijani bashorat qiling (JSON).")
     parsed = _extract_json(_call([{"role": "system", "content": _ld(lang) + " " + _SYSTEM_TWIN},
                                   {"role": "user", "content": user + "\n\n" + _ld(lang)}],
-                                 max_tokens=320, temperature=0.2))
+                                 max_tokens=520, temperature=0.25))
 
     if parsed and isinstance(parsed, dict):
         level = parsed.get("level", "Ehtiyot")
         warnings = parsed.get("warnings", []) or []
-        summary = parsed.get("summary", "")
         if rule_warnings:
             level = "Xavfli"
             warnings = rule_warnings + [w for w in warnings if w not in rule_warnings]
-        return {"level": level, "warnings": warnings, "summary": summary, "ai": True}
+        return {"level": level, "warnings": warnings, "summary": parsed.get("summary", ""),
+                "effect": parsed.get("effect", ""), "changes": (parsed.get("changes") or [])[:5],
+                "side_effects": (parsed.get("side_effects") or [])[:5], "ai": True}
 
-    # Fallback (LLM yo'q)
+    # Fallback (LLM yo'q / token tugagan) — klinik baza asosidagi simulyatsiya
+    prof = clinical.drug_profile(drug)
+    if prof:
+        level = "Xavfli" if rule_warnings else "Ehtiyot"
+        summ = (f"Egizak simulyatsiyasi (klinik baza): {prof['effect']}. "
+                + ("Diqqat — allergiya mosligi aniqlandi!" if rule_warnings else "Nojo'ya ta'sirlarni kuzatib boring."))
+        return {"level": level, "warnings": rule_warnings, "summary": summ,
+                "effect": prof["effect"], "changes": list(prof["changes"]),
+                "side_effects": list(prof["side"]), "ai": False}
+    base = {"effect": "", "changes": [], "side_effects": []}
     if rule_warnings:
         return {"level": "Xavfli", "warnings": rule_warnings,
-                "summary": "Allergiya mosligi aniqlandi — bu dorini bermang, muqobil tanlang.",
-                "ai": False}
+                "summary": "Allergiya mosligi aniqlandi — bu davolashni egizakда qo'llamang, muqobil tanlang.",
+                **base, "ai": False}
     return {"level": "Ehtiyot", "warnings": [],
-            "summary": "Avtomatik baholash mavjud emas — bemor tarixi va ko'rsatkichlarini shifokor tekshirsin.",
-            "ai": False}
+            "summary": "Egizak simulyatsiyasi hozircha mavjud emas — dori nomini tekshiring.",
+            **base, "ai": False}
 
 
 # ---------- #12: Bemor uchun turmush-tarzi tavsiyalari ----------
@@ -283,9 +293,11 @@ def generate_treatment_plan(patient, diagnosis, lang="uz"):
 # ---------- #12+: Shifokor o'zgartirganда oqibat ----------
 _SYSTEM_CONS = (
     "Siz klinik xavfsizlik yordamchisisiz. Shifokor davolash bandini o'zgartirdi. "
-    "Bu o'zgarish QANDAY OQIBATLARGA olib kelishi mumkinligini 1-2 jumlaда, aniq va "
-    "xolisona tushuntiring (samaradorlik, xavf, monitoring zarurati). Dori tavsiya "
-    "qilmang — faqat oqibatni bayon eting. Faqat oddiy matn qaytaring."
+    "YANGI dori/doza aynan SHU BEMOR uchun qanaqa ANIQ nojo'ya holat yoki xavfga olib "
+    "kelishi mumkinligini 1-2 jumlada, KONKRET nomlab ayting — aynan qaysi nojo'ya ta'sir "
+    "(masalan: quruq yo'tal, gipoglikemiya, giperkaliemiya, oshqozon qonashi, taxikardiya, "
+    "gipotoniya). 'Samaradorlikni kuzating' kabi UMUMIY gap YOZMANG — konkret oqibatni "
+    "ayting. Bemorning kasalliklari va allergiyalarini hisobga oling. Faqat oddiy matn."
 )
 
 
@@ -304,9 +316,16 @@ def edit_consequence(patient, original, changed, lang="uz"):
         if hits and not any(a.lower() in out.lower() for a in hits):
             out = f"⚠ Bemorда {', '.join(hits)} allergiyasi bor — bu dori mos kelmasligi mumkin. " + out
         return out
-    # Fallback
+    # Fallback (LLM yo'q / token tugagan) — dori-xos aniq oqibat
     if hits:
         return f"⚠ Diqqat: bemorда {', '.join(hits)} allergiyasi bor — o'zgartirilgan dori mos kelmasligi mumkin, muqobil tanlang."
-    if original.get("name", "").lower() != changed.get("name", "").lower():
-        return "Dori almashtirildi — yangi dori samaradorligi va nojo'ya ta'sirlarini kuzatib boring; bemor tarixiga mosligini tekshiring."
+    prof = clinical.drug_profile(changed.get("name", ""))
+    name_changed = original.get("name", "").lower() != changed.get("name", "").lower()
+    if prof:
+        se = ", ".join(prof["side"][:3])
+        if name_changed:
+            return f"{changed.get('name')} — {prof['effect'].lower()}. Ehtimoliy nojo'ya ta'sirlar: {se}. Bemor holatiga mosligini tekshiring."
+        return f"Doza/tartib o'zgartirildi — {changed.get('name')} nojo'ya ta'sirlari ({se}) kuchayishi yoki samaradorligi o'zgarishi mumkin; ko'rsatkichlarni qayta baholang."
+    if name_changed:
+        return "Dori almashtirildi — yangi dorining nojo'ya ta'sirlari va bemor tarixiga mosligini tekshiring."
     return "Doza/tartib o'zgartirildi — bu davolash samaradorligi va xavfsizligiga ta'sir qilishi mumkin; ko'rsatkichlarni qayta baholang."

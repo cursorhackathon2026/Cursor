@@ -229,6 +229,62 @@ def allergy_conflicts(drug, allergies):
     return hits
 
 
+# dori (kalit so'z) -> {effect, changes[], side[]} — LLM bo'lmaganda egizak simulyatsiyasi uchun
+DRUG_INFO = {
+    "amlodipin": {"effect": "Tomirlarni kengaytirib qon bosimini bosqichma-bosqich pasaytiradi",
+                  "changes": ["Sistolik bosim ~10–15 mmHg pasayadi"],
+                  "side": ["Oyoq/to'piq shishi", "Bosh og'rig'i", "Yuz qizarishi"]},
+    "lizinopril": {"effect": "Qon bosimini pasaytiradi, yurak va buyrakni himoya qiladi",
+                   "changes": ["Bosim ~10–20 mmHg pasayadi"],
+                   "side": ["Quruq yo'tal", "Giperkaliemiya (kaliy oshishi)", "Gipotoniya"]},
+    "enalapril": {"effect": "APF ingibitori — qon bosimini pasaytiradi",
+                  "changes": ["Bosim ~10–20 mmHg pasayadi"],
+                  "side": ["Quruq yo'tal", "Giperkaliemiya", "Gipotoniya"]},
+    "metildopa": {"effect": "Homiladorlikda xavfsiz — qon bosimini pasaytiradi",
+                  "changes": ["Bosim asta pasayadi"], "side": ["Uyquchanlik", "Charchoq", "Og'iz qurishi"]},
+    "metformin": {"effect": "Jigarda qand ishlab chiqarishini kamaytirib, qonda qandni pasaytiradi",
+                  "changes": ["Ochlik qandi ~2–3 mmol/L pasayadi", "HbA1c ~1% pasayadi"],
+                  "side": ["Ko'ngil aynishi", "Diareya", "Uzoq muddatda B12 tanqisligi"]},
+    "insulin": {"effect": "Qonda qand darajasini tez pasaytiradi",
+                "changes": ["Qand tez pasayadi"], "side": ["Gipoglikemiya (past qand)", "Vazn ortishi"]},
+    "atorvastatin": {"effect": "LDL xolesterinni pasaytiradi, tomir bloklanishini kamaytiradi",
+                     "changes": ["LDL ~40–50% pasayadi"], "side": ["Mushak og'rig'i", "Jigar fermentlari ko'tarilishi"]},
+    "rozuvastatin": {"effect": "Xolesterinni kuchli pasaytiradi",
+                     "changes": ["LDL ~45–55% pasayadi"], "side": ["Mushak og'rig'i", "Jigar fermentlari ko'tarilishi"]},
+    "bisoprolol": {"effect": "Yurak urish tezligi va yukini kamaytiradi",
+                   "changes": ["Puls ~10–15/daq pasayadi", "Bosim pasayadi"],
+                   "side": ["Bradikardiya", "Charchoq", "Sovuq qo'l-oyoq"]},
+    "metoprolol": {"effect": "Beta-blokator — yurak yukini kamaytiradi",
+                   "changes": ["Puls pasayadi", "Bosim pasayadi"], "side": ["Bradikardiya", "Charchoq", "Bosh aylanishi"]},
+    "aspirin": {"effect": "Qon ivishini kamaytirib tromboz xavfini pasaytiradi",
+                "changes": ["Tromboz/infarkt xavfi kamayadi"], "side": ["Oshqozon qonashi", "Gastrit", "Qon ketish xavfi"]},
+    "furosemid": {"effect": "Ortiqcha suyuqlikni chiqarib shish va bosimni kamaytiradi",
+                  "changes": ["Shish kamayadi", "Bosim pasayadi"], "side": ["Kaliy tanqisligi", "Dehidratatsiya", "Gipotoniya"]},
+    "omeprazol": {"effect": "Oshqozon kislotasini kamaytiradi",
+                  "changes": ["Jizzillash/og'riq kamayadi"], "side": ["Bosh og'rig'i", "Diareya", "Uzoq muddatda B12"]},
+    "salbutamol": {"effect": "Bronxlarni kengaytirib nafasni yengillashtiradi",
+                   "changes": ["Nafas yengillashadi", "SpO₂ ko'tariladi"], "side": ["Taxikardiya", "Qo'l titrashi", "Bezovtalik"]},
+    "budesonid": {"effect": "Bronx yallig'lanishini bosadi (profilaktika)",
+                  "changes": ["Huruj chastotasi kamayadi"], "side": ["Og'iz kandidozi", "Ovoz bo'g'ilishi"]},
+    "levotiroksin": {"effect": "Qalqonsimon bez gormonini o'rnini bosadi",
+                     "changes": ["Modda almashinuvi normallashadi", "TSH pasayadi"], "side": ["Ortiqcha dozada taxikardiya", "Bezovtalik", "Uyqusizlik"]},
+    "allopurinol": {"effect": "Siydik kislotasini pasaytiradi, podagra xurujini oldini oladi",
+                    "changes": ["Siydik kislotasi pasayadi"], "side": ["Teri toshmasi", "Jigar ta'siri"]},
+    "temir": {"effect": "Temir zaxirasini to'ldirib gemoglobinni tiklaydi",
+              "changes": ["Hb asta ko'tariladi"], "side": ["Qorin og'rig'i", "Ich qotishi", "Najas qoraymog'i"]},
+    "paratsetamol": {"effect": "Og'riq va isitmani kamaytiradi",
+                     "changes": ["Og'riq/harorat pasayadi"], "side": ["Ortiqcha dozada jigar zararlanishi"]},
+}
+
+
+def drug_profile(name):
+    low = (name or "").lower()
+    for kw, info in DRUG_INFO.items():
+        if kw in low:
+            return info
+    return None
+
+
 def prognosis(conditions, age=0):
     """5 yillik ehtimoliy asoratlar ro'yxati."""
     out = []

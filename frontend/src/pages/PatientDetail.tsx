@@ -65,6 +65,21 @@ function TwinSection({ patientId }: { patientId: string }) {
             <span className="text-xs text-slate-500 dark:text-slate-400">— {res.drug} {res.dose}</span>
           </div>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{res.summary}</p>
+          {res.effect && (
+            <p className="mt-2 text-sm text-slate-700 dark:text-slate-200"><span className="font-semibold text-brand">✦ {t('twin.effect')}: </span>{res.effect}</p>
+          )}
+          {!!res.changes?.length && (
+            <div className="mt-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('twin.changes')}</p>
+              <ul className="mt-1 space-y-0.5">{res.changes.map((c, i) => <li key={i} className="text-sm text-slate-700 dark:text-slate-200">→ {c}</li>)}</ul>
+            </div>
+          )}
+          {!!res.side_effects?.length && (
+            <div className="mt-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600">{t('twin.side')}</p>
+              <ul className="mt-1 space-y-0.5">{res.side_effects.map((s, i) => <li key={i} className="text-sm text-amber-700 dark:text-amber-300">• {s}</li>)}</ul>
+            </div>
+          )}
           {res.warnings.length > 0 && (
             <ul className="mt-2 space-y-1">{res.warnings.map((w, i) => <li key={i} className={`text-sm ${st.text}`}>• {w}</li>)}</ul>
           )}

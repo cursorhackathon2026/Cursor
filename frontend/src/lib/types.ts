@@ -206,6 +206,9 @@ export interface TwinResult {
   level: 'Xavfsiz' | 'Ehtiyot' | 'Xavfli'
   warnings: string[]
   summary: string
+  effect?: string
+  changes?: string[]
+  side_effects?: string[]
   ai: boolean
   drug?: string
   dose?: string
