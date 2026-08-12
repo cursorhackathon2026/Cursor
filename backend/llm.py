@@ -157,7 +157,8 @@ def twin_evaluate(patient, drug, dose, lang="uz"):
                 "summary": "Allergiya mosligi aniqlandi — bu davolashni egizakда qo'llamang, muqobil tanlang.",
                 **base, "ai": False}
     return {"level": "Ehtiyot", "warnings": [],
-            "summary": "Egizak simulyatsiyasi hozircha mavjud emas — dori nomini tekshiring.",
+            "summary": f"«{drug}» dori sifatida tanilmadi — nomni to'g'ri kiritganingizni tekshiring "
+                       f"(mas. Lizinopril, Metformin, Amlodipin, Bisoprolol).",
             **base, "ai": False}
 
 
