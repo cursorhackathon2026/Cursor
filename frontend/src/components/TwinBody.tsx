@@ -7,7 +7,7 @@ import type { Group, Mesh, MeshStandardMaterial } from 'three'
 import type { Patient } from '../lib/types'
 import { useT, type Lang } from '../lib/i18n'
 
-const MODEL = '/twin.glb?v=xray'
+const MODEL = '/twin.glb?v=real'
 useGLTF.preload(MODEL)
 
 type Sev = 'red' | 'amber' | 'green'
